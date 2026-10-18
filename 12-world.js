@@ -1,6 +1,6 @@
 /* ===== 3D world (world/) ===== */
-const R=new THREE.WebGLRenderer({canvas:$('c'),antialias:false});
-R.setPixelRatio(Math.min(devicePixelRatio||1,2));
+let R=null;
+try{R=new THREE.WebGLRenderer({canvas:$('c'),antialias:false});R.setPixelRatio(Math.min(devicePixelRatio||1,2));}catch(e){console.warn('WebGL unavailable',e)}
 const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(60,1,.1,200);
 const hemi=new THREE.HemisphereLight(0xffffff,0x557755,.9),sun=new THREE.DirectionalLight(0xffffff,.6);
 sun.position.set(10,20,10);sc.add(hemi,sun);
@@ -30,7 +30,6 @@ const outRects=[],inRects=[],acts=[],movers=[];
 box(OUT,320,.1,110,0x6fb35a,0,-.05,0);box(OUT,320,.12,6,0x4a4f57,0,0,3);
 for(let x=-150;x<150;x+=6)box(OUT,2.5,.14,.25,0xf0f0f0,x,0,3);
 const WM=new THREE.MeshBasicMaterial({color:0x9fd0f0});const wn=(x,y,z)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1.4,1.2,.12),WM);m.position.set(x,y,z);OUT.add(m)};
-// Landmark buildings (player home area, school, uni, shop)
 [[0,-8,0xffd9a0]].forEach(([x,z,c])=>{box(OUT,8,4,6,c,x,2,z);box(OUT,9,1,7,0xb5523b,x,4.5,z);outRects.push([x,z,8,6]);const fz=z+3;box(OUT,1.4,2.4,.2,0x6b4226,x,1.2,fz+.05);[-2.4,2.4].forEach(d=>wn(x+d,2.4,fz+.07));});
 box(OUT,10,4,7,0x6fa8dc,28,2,-8);box(OUT,11,1,8,0x274c77,28,4.5,-8);outRects.push([28,-8,10,7]);box(OUT,1.8,2.6,.2,0x2b2b2b,28,1.3,-4.45);box(OUT,4,.06,3,0x3a86ff,28,.09,-3.4);
 box(OUT,10,4,7,0xc9b6e8,-28,2,15);box(OUT,11,1,8,0x5a3d8a,-28,4.5,15);outRects.push([-28,15,10,7]);box(OUT,1.8,2.6,.2,0x2b2b2b,-28,1.3,11.55);box(OUT,4,.06,3,0x9b5de5,-28,.09,10.4);
