@@ -9,7 +9,7 @@ function update(dt){
   marker.rotation.y+=dt*2;mk2.forEach((m,i)=>{m.rotation.y+=dt*2;m.position.y=5.8+Math.sin(performance.now()/400+i)*.3});marker.position.y=5.8+Math.sin(performance.now()/400)*.3;
   if(!S){cam.position.set(10,8,16);cam.lookAt(0,2,-4);return}
   if(!modalOpen){
-    S.t+=dt*2;S.energy=Math.max(0,S.energy-dt*(.07+(!S.inside&&raining()?.06:0))*(1-(S.sk?S.sk.fit:0)/250));
+    S.t+=dt*2;if(typeof tickAct==='function')tickAct();S.energy=Math.max(0,S.energy-dt*(.07+(!S.inside&&raining()?.06:0))*(1-(S.sk?S.sk.fit:0)/250));
     let ix=jx+(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),iy=jy+(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);
     const mag=Math.min(1,Math.hypot(ix,iy));mvSp=mag>.1?mag:0;
     if(mag>.1){
@@ -23,7 +23,6 @@ function update(dt){
     }
     saveT+=dt;if(saveT>10){saveT=0;S.x=P.position.x;S.z=P.position.z;store()}
   }
-  // day / night
   const h=(S.t/60)%24,k=h>=7&&h<18?1:(h>=5&&h<7)?(h-5)/2:(h>=18&&h<20)?1-(h-18)/2:0;
   const rn=raining();if(!S.inside){sc.background=new THREE.Color(0x0b1030).lerp(new THREE.Color(0x9ad3ff),k);if(rn)sc.background.lerp(new THREE.Color(0x6e7b86),.65)}
   $('rain').style.display=rn&&!S.inside?'block':'none';
@@ -47,12 +46,10 @@ function update(dt){
   {const a=age();if(S.age==null)S.age=a;if(a>S.age&&!modalOpen&&!S.vis){S.age=a;birthday()}}
   if(amb)amb.gain.value=S.muted?0:(S.inside?.01:(rn?.07:.04));
   $('he').style.width=Math.round(S.energy)+'%';
-  // nearest interactable
   const list=S.inside?(S.vis?A_V():A_IN):A_OUT.concat(NP.filter(n=>n.g.visible).map(n=>({x:n.g.position.x,z:n.g.position.z,r:2.6,label:'Talk to '+n.name,fn:()=>talk(n.id)})));near=null;let bd=99;
   list.forEach(a=>{const d=Math.hypot(a.x-P.position.x,a.z-P.position.z);if(d<(a.r||2.8)&&d<bd){bd=d;near=a}});
   const ab=$('act');if(near&&!modalOpen){ab.style.display='block';ab.textContent=near.label}else ab.style.display='none';
   $('hint').textContent=S.inside?'Walk to the desk to study and take an exam':(S.area||'Maple Close')+' · Yellow: home · Blue: school · Purple: university · Orange: shop';
-  // camera
   const d=S.inside?7:9,hh=S.inside?7:6;
   camT={x:P.position.x,y:1.4,z:P.position.z};cam.position.set(P.position.x+Math.sin(yaw)*d,hh,P.position.z+Math.cos(yaw)*d);cam.lookAt(P.position.x,1.4,P.position.z);
 }
