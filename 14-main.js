@@ -1,5 +1,5 @@
 /* ===== main loop (main.js) ===== */
-const blocked=(x,z,rs)=>rs.some(r=>Math.abs(x-r[0])<r[2]/2+.4&&Math.abs(z-r[1])<r[3]/2+.4);
+const blocked=(x,z,rs)=>rs.some(r=>Math.abs(x-r[0])<r[2]/2+.22&&Math.abs(z-r[1])<r[3]/2+.22);
 function resize(){if(R && R.setSize){R.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}}
 addEventListener('resize',resize);try{resize()}catch(e){}
 let last=performance.now(),saveT=0;
