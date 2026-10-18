@@ -1,12 +1,14 @@
 /* ===== weather, age and skills (life.js) ===== */
 let WX=null; // test hook: true/false forces rain, null = natural
-const rainyDay=d=>WX!==null?WX:(Math.imul(d+7,2654435761)>>>0)%100<30;
-const raining=()=>{const h=hr();return h>=13&&h<19&&rainyDay(day())};
+const rainyDay=d=>WX!==null?WX:(Math.imul(d+7,2654435761)>>>0)%100<28;
+// Random 2-hour rain window on rainy days (starts between 11:00 and 16:00)
+const rainStart=d=>11+((Math.imul(d+13,2654435761)>>>0)%100)%6;
+const raining=()=>{const h=hr();if(!rainyDay(day()))return false;const s=rainStart(day());return h>=s&&h<s+2};
 const YEAR=14,age=()=>16+Math.floor(day()/YEAR); // one year = 14 game days
 function birthday(){
   const gift={Low:20,Middle:50,Wealthy:150}[S.fam.cls],fr=NP.filter(n=>rel(n.id).f>=40);
   S.cash+=gift;fr.forEach(n=>{const r=rel(n.id);r.f=Math.min(100,r.f+3)});gain('fun',25);gain('social',15);SFX.chime();store();
-  modal(`<h3>Happy birthday, ${S.name}!</h3><p>You are now <b>${S.age}</b>.</p><p>Your family bakes a cake and gives you <b>${gbp(gift)}</b>. Fun +25, social +15.</p>`+(fr.length?`<p>${fr.map(n=>n.name).join(', ')} remembered and sent wishes. Friendship +3.</p>`:'<p class="m">No neighbour knows you well enough yet to remember.</p>'),true);
+  modal(`<h3>Happy birthday, ${S.name}!</h3><p>You are now <b>${S.age}</b>.</p><p>Your family bakes a cake and gives you <b>${gbp(gift)}</b>. Fun +25, social +15.</p>`+(fr.length?`<p>${fr.map(n=>n.name).join(', ')} remembered and sent wishes. Friendship +3.</p>`:'<p class="m">No neighbour knows you well enough yet to remember.</p>`),true);
 }
 const nstat=n=>({sleep:'asleep',away:'at school or work until 14:00',home:'at home',out:'out walking in '+areaOf(n.cx).n})[nstate(n)];
 function phone(){modal(`<h3>📱 Phone</h3><p class="m">Balance ${gbp(S.cash)} · ${areaOf(P.position.x).n}</p><button class="o" onclick="pMsgs()">Messages${(S.inbox||[]).length?' ('+S.inbox.length+')':''}</button><button class="o" onclick="pContacts()">Contacts</button><button class="o" onclick="pMap()">Maps</button><button class="o" onclick="pFood()">Food delivery</button>`,true)}
@@ -24,6 +26,21 @@ function cook(){
   S.cash-=2;const c=S.sk.cook,h=30+Math.round(c*.4);gain('hunger',h);gain('fun',5);S.sk.cook=Math.min(100,c+4*(1-c/120));S.t+=30;SFX.ok();toast('You cooked. Hunger +'+h+' · Cooking skill '+Math.round(S.sk.cook));store();
 }
 function workout(){
-  if(S.energy<20){toast('Too tired to exercise');SFX.bad();return}
-  const f=S.sk.fit;S.sk.fit=Math.min(100,f+3*(1-f/120));S.energy-=12;gain('hygiene',-10);gain('fun',10);S.t+=40;SFX.ok();toast('Good workout! Fitness '+Math.round(S.sk.fit));store();
+  if(S.energy<15){toast('Too tired to exercise');SFX.bad();return}
+  S.energy-=12;const f=S.sk.fit,g=8+Math.round(f*.15);gain('fun',g);S.sk.fit=Math.min(100,f+3*(1-f/120));S.t+=25;SFX.ok();toast('Workout done. Fun +'+g+' · Fitness '+Math.round(S.sk.fit));store();
+}
+const comfort=()=>(S.deco?S.deco.length:0)*.4+(S.paint&&S.paint.wall!=='#f3ead7'?1:0);
+function ML(m){return m>70?'😊':m>40?'😐':'😔'}
+function mood(){const N=S.need;return (N.hunger+N.fun+N.social+N.hygiene)/4}
+function gain(k,v){if(S.need[k]!=null)S.need[k]=cl(S.need[k]+v)}
+function cl(v){return Math.max(0,Math.min(100,v))}
+function lifeEvent(){
+  const evs=[
+    ()=>{gain('fun',15);toast('You found £5 on the pavement!');S.cash+=5;SFX.chime()},
+    ()=>{gain('social',10);toast('A neighbour waved and said hello. Social +10')},
+    ()=>{gain('fun',-8);toast('You stubbed your toe. Ouch. Fun -8');SFX.bad()},
+    ()=>{if(S.cash>=3){S.cash-=3;gain('fun',12);toast('Impulse snack. £3 · Fun +12')}else toast('You wanted a snack but had no cash')},
+    ()=>{gain('hygiene',-10);toast('It started raining and you got a bit wet. Hygiene -10')},
+  ];
+  pick(evs)();S.evT=S.t+rnd(180,400);store();
 }
