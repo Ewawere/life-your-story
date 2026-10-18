@@ -4,7 +4,7 @@ const day=()=>Math.floor(S.t/1440),hr=()=>(S.t%1440)/60;
 function schoolMenu(){
   const d=day()%7,h=hr();let st='';
   if(d>4)st='School is closed at weekends.';else if(h<8||h>=14)st='School runs 08:00–14:00. Come back during school hours.';else if(S.lastSch===day())st='You already attended today. See you tomorrow.';else if(S.energy<15)st='You are too tired for class. Eat or sleep first.';
-  modal(`<h3>Greenfield Secondary School</h3><p class="m">Lessons attended: ${S.att}</p><table>${TT.map((x,i)=>`<tr><td>${DN[i]}</td><td>${x}${i===d?' <b>(today)</b>':''}</td></tr>`).join('')}</table>`+(st?`<p>${st}</p>`:`<button class="o go" onclick="lesson()">Attend today's ${TT[d]} lesson</button>`),true);
+  modal(`<h3>Greenfield Secondary School</h3><p class="m">${addr(28,-8)} · Lessons attended: ${S.att}</p><table>${TT.map((x,i)=>`<tr><td>${DN[i]}</td><td>${x}${i===d?' <b>(today)</b>':''}</td></tr>`).join('')}</table>`+(st?`<p>${st}</p>`:`<button class="o go" onclick="lesson()">Attend today's ${TT[d]} lesson</button>`),true);
 }
 function lesson(){
   const sub=TT[day()%7],qs=pickQs(QB.filter(q=>q.s===sub),4,lvl(S.know[sub]));
