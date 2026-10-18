@@ -7,12 +7,24 @@ sun.position.set(10,20,10);sc.add(hemi,sun);
 sc.background=new THREE.Color(0x9ad3ff);const OUT=new THREE.Group(),INN=new THREE.Group();sc.add(OUT,INN);
 function box(g,w,h,d,c,x,y,z){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshLambertMaterial({color:c}));m.position.set(x,y,z);g.add(m);return m}
 function cyl(g,rt,rb,h,c,x,y,z,seg){const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg||8),new THREE.MeshLambertMaterial({color:c}));m.position.set(x,y,z);g.add(m);return m}
-function person(color,hair,skin){const g=new THREE.Group();skin=skin||0x8d5a3b;hair=hair||0x1d1410;const L=c=>new THREE.MeshLambertMaterial({color:c});
-  cyl(g,.35,.4,1.1,color,0,.95,0);cyl(g,.14,.14,.8,0x33384a,-.17,.4,0,6);cyl(g,.14,.14,.8,0x33384a,.17,.4,0,6);cyl(g,.09,.09,.8,skin,-.46,1,0,6);cyl(g,.09,.09,.8,skin,.46,1,0,6);
-  const h=new THREE.Mesh(new THREE.SphereGeometry(.3,12,10),L(skin));h.position.y=1.8;g.add(h);
-  const cap=new THREE.Mesh(new THREE.SphereGeometry(.33,12,8,0,Math.PI*2,0,Math.PI/2),L(hair));cap.position.y=1.86;g.add(cap);
-  [-.11,.11].forEach(x=>{const e=new THREE.Mesh(new THREE.SphereGeometry(.04,6,6),L(0x111111));e.position.set(x,1.82,.27);g.add(e)});
-  const sh=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.02,12),new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:.25}));sh.position.y=.02;g.add(sh);return g}
+function person(color,hair,skin,o){o=o||{};skin=skin||0x8d5a3b;hair=hair||0x1d1410;const g=new THREE.Group(),L=c=>new THREE.MeshLambertMaterial({color:c}),pants=o.pants||0x33384a;
+  const sub=(x,y,z)=>{const q=new THREE.Group();q.position.set(x,y,z);g.add(q);return q};
+  const sph=(q,r,c,x,y,z)=>{const m=new THREE.Mesh(new THREE.SphereGeometry(r,10,8),L(c));m.position.set(x,y,z);q.add(m);return m};
+  const lL=sub(-.17,.8,0),lR=sub(.17,.8,0);[lL,lR].forEach(q=>{cyl(q,.13,.12,.72,pants,0,-.36,0,6);box(q,.24,.14,.4,0x222222,0,-.78,.07)});
+  const torso=sub(0,0,0);cyl(torso,.35,.4,1.1,color,0,.95,0);cyl(torso,.1,.1,.2,skin,0,1.55,0,6);if(o.dress)cyl(torso,.38,.62,.7,color,0,.55,0,10);
+  const aL=sub(-.46,1.45,0),aR=sub(.46,1.45,0);[aL,aR].forEach(q=>{cyl(q,.1,.09,.62,color,0,-.31,0,6);sph(q,.09,skin,0,-.68,0)});
+  const head=sub(0,1.8,0);sph(head,.3,skin,0,0,0);[-.3,.3].forEach(x=>sph(head,.06,skin,x,0,0));
+  [-.11,.11].forEach(x=>{sph(head,.04,0x111111,x,.02,.27);box(head,.12,.02,.02,hair,x,.12,.27)});sph(head,.04,skin,0,-.03,.3);box(head,.1,.03,.02,0x7a2e2e,0,-.13,.28);
+  const st=o.style||'short';
+  if(st!=='bald'){const m=new THREE.Mesh(new THREE.SphereGeometry(.33,12,8,0,Math.PI*2,0,Math.PI/2),L(st==='cap'?(o.hat||0x2255aa):hair));m.position.y=.04;head.add(m)}
+  if(st==='long')box(head,.62,.75,.22,hair,0,-.3,-.2);
+  if(st==='bun')sph(head,.15,hair,0,.38,-.05);
+  if(st==='curly')[[-.22,.22],[.22,.22],[0,.32],[-.3,0],[.3,0],[0,.1]].forEach(([x,y])=>sph(head,.16,hair,x,y+.05,-.04));
+  if(st==='cap')box(head,.4,.03,.25,o.hat||0x2255aa,0,.1,.3);
+  if(o.glasses)[-.11,.11].forEach(x=>{const t=new THREE.Mesh(new THREE.TorusGeometry(.07,.012,6,12),L(0x222222));t.position.set(x,.02,.29);head.add(t)});
+  const sh=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.02,12),new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:.25}));sh.position.y=.02;g.add(sh);
+  g.userData={lL,lR,aL,aR,torso,head};return g}
+function anim(g,sp,t){const u=g&&g.userData;if(!u||!u.lL)return;const a=Math.sin(t*9)*.7*sp;u.lL.rotation.x=a;u.lR.rotation.x=-a;u.aL.rotation.x=-a*.8;u.aR.rotation.x=a*.8;u.head.rotation.y=Math.sin(t*1.3)*.15*(1-sp);u.torso.scale.y=1+Math.sin(t*2.2)*.012}
 
 const outRects=[],inRects=[],acts=[],movers=[];
 // neighbourhood
@@ -27,8 +39,9 @@ box(OUT,10,4,7,0x6fa8dc,28,2,-8);box(OUT,11,1,8,0x274c77,28,4.5,-8);outRects.pus
 box(OUT,10,4,7,0xc9b6e8,-28,2,15);box(OUT,11,1,8,0x5a3d8a,-28,4.5,15);outRects.push([-28,15,10,7]);box(OUT,1.8,2.6,.2,0x2b2b2b,-28,1.3,11.55);box(OUT,4,.06,3,0x9b5de5,-28,.09,10.4);
 Array.from({length:16},(_,i)=>-120+i*16).forEach(x=>{cyl(OUT,.08,.1,4,0x333333,x,2,-.9,6);const b=new THREE.Mesh(new THREE.SphereGeometry(.3,8,6),new THREE.MeshBasicMaterial({color:0xfff2b0}));b.position.set(x,4.1,-.9);OUT.add(b)});
 box(OUT,8,4,6,0xf4a261,0,2,15);box(OUT,9,1,7,0x9c4a1a,0,4.5,15);outRects.push([0,15,8,6]);box(OUT,1.4,2.4,.2,0x6b4226,0,1.2,11.95);box(OUT,4,.06,3,0xf4a261,0,.09,10.6);box(OUT,6,.8,.3,0xfff1d0,0,3.3,11.8);
-const DIST=[{n:'Hillcrest Gardens',ox:-90,gr:0x86a55a,wall:[0xc9a27e,0xb08968,0xd8c3a5,0xa68a64,0xbfa58a],roof:0x6b3f2a},{n:'Maple Close',ox:0},{n:'Riverside Terrace',ox:90,gr:0x7ab8a0,wall:[0xf4f1ea,0xdfe9f2,0xe8e0f0,0xd7ecec,0xfbe9d0],roof:0x3b6ea5}];
+const DIST=[{n:'Hillcrest Gardens',code:'HG',st:['Hillcrest Rise','Orchard Lane'],ox:-90,gr:0x86a55a,wall:[0xc9a27e,0xb08968,0xd8c3a5,0xa68a64,0xbfa58a],roof:0x6b3f2a},{n:'Maple Close',code:'MC',st:['Maple Close','Elm Road'],ox:0},{n:'Riverside Terrace',code:'RT',st:['River Walk','Wharf Street'],ox:90,gr:0x7ab8a0,wall:[0xf4f1ea,0xdfe9f2,0xe8e0f0,0xd7ecec,0xfbe9d0],roof:0x3b6ea5}];
 const areaOf=x=>DIST.find(d=>Math.abs(x-d.ox)<=45)||DIST[1];
+const addr=(x,z)=>{const d=areaOf(x),i=[-28,-14,0,14,28].indexOf(Math.round(x-d.ox)),no=z<3;return `${no?2*(i+1):2*i+1} ${d.st[no?0:1]}, ${d.n}`};
 function house(x,z,c,roof){box(OUT,8,4,6,c,x,2,z);box(OUT,9,1,7,roof,x,4.5,z);outRects.push([x,z,8,6]);const fz=z<3?z+3:z-3,sg=z<3?1:-1;box(OUT,1.4,2.4,.2,0x6b4226,x,1.2,fz+.05*sg);[-2.4,2.4].forEach(d=>wn(x+d,2.4,fz+.07*sg))}
 const HP=[[-28,-8],[-14,-8],[0,-8],[14,-8],[28,-8],[-28,15],[-14,15],[0,15],[14,15],[28,15]];
 DIST.filter(d=>d.ox).forEach(d=>{box(OUT,84,.04,84,d.gr,d.ox,.01,0);HP.forEach(([rx,rz],i)=>house(d.ox+rx,rz,d.wall[i%5],d.roof));
@@ -42,9 +55,9 @@ for(let i=0;i<14;i++){const x=-36+i*5.5+(i%3),z=(i%2?-20:24)+(i%4);cyl(OUT,.2,.2
 const car=new THREE.Group();box(car,3,.8,1.6,0xd1332b,0,.6,0);box(car,1.6,.7,1.4,0xf5f5f5,0,1.3,0);car.position.set(-40,0,4.4);OUT.add(car);movers.push({o:car,v:6,ax:'x',min:-138,max:138,wrap:1});
 [[0x7a4bd1,-2.4,2,0,16],[0x1fa37a,8.5,-2.2,-30,30]].forEach(([c,z,v,mn,mx])=>{const n=person(c);n.position.set(mn,0,z);OUT.add(n);movers.push({o:n,v,ax:'x',min:mn,max:mx,walk:1})});
 
-NP.forEach(n=>{n.g=person(n.color,n.hair,n.skin);OUT.add(n.g)});
+NP.forEach(n=>{n.g=person(n.color,n.hair,n.skin,n.o);OUT.add(n.g)});
 // home interior
-box(INN,10,.1,10,0xd8b98a,0,-.05,0);box(INN,10,4,.2,0xf3ead7,0,2,-5);box(INN,.2,4,10,0xf3ead7,-5,2,0);box(INN,.2,4,10,0xf3ead7,5,2,0);
+const HFL=box(INN,10,.1,10,0xd8b98a,0,-.05,0),HW=[box(INN,10,4,.2,0xf3ead7,0,2,-5),box(INN,.2,4,10,0xf3ead7,-5,2,0),box(INN,.2,4,10,0xf3ead7,5,2,0)];
 box(INN,1.8,.04,1.2,0x2e8b57,0,.07,4.2);
 box(INN,3,1,1.4,0x8a5a2b,-3,.5,-4);box(INN,.9,.06,.6,0x333,-3,1.05,-4.1);        // desk + laptop
 box(INN,2.2,.6,3.6,0x3d6fb6,3,.3,-3.5);box(INN,1.6,.2,.6,0xffffff,3,.7,-4.9);       // bed
@@ -55,16 +68,16 @@ inRects.push([0,-4.4,1.6,.8],[4.3,-.1,1,1.1],[-3,-4,3,1.4],[3,-3.5,2.2,3.6],[4,2
 const INN2=new THREE.Group(),hostG=new THREE.Group();sc.add(INN2);INN2.add(hostG);INN2.visible=false;
 box(INN2,10,.1,10,0xc9a46c,0,-.05,0);box(INN2,10,4,.2,0xdcefe8,0,2,-5);box(INN2,.2,4,10,0xdcefe8,-5,2,0);box(INN2,.2,4,10,0xdcefe8,5,2,0);box(INN2,1.8,.04,1.2,0xb5523b,0,.07,4.2);
 box(INN2,3,2.2,.8,0x7a4a2a,-3,1.1,-4.3);box(INN2,2.4,.9,1.6,0x9c6b3f,3,.45,-3.5);box(INN2,1.2,1,1.2,0x333344,4,.5,2);box(INN2,1,.7,.1,0x111111,4,1.35,2);box(INN2,3,.8,1.2,0x2a7f62,-3.5,.4,1.5);
-function buildHost(n){while(hostG.children.length)hostG.remove(hostG.children[0]);hostG.add(person(n.color,n.hair,n.skin));hostG.position.set(0,0,-1.8)}
+function buildHost(n){while(hostG.children.length)hostG.remove(hostG.children[0]);hostG.add(person(n.color,n.hair,n.skin,n.o));hostG.position.set(0,0,-1.8)}
 const P=new THREE.Group();sc.add(P);let pBody=null;
-function buildPlayer(){while(P.children.length)P.remove(P.children[0]);P.add(person(new THREE.Color(S.color),S.hair,S.skin))}
+function buildPlayer(){while(P.children.length)P.remove(P.children[0]);P.add(person(new THREE.Color(S.color),S.hair,S.skin,{style:S.style||'short'}))}
 function setScene(inside,vis){SFX.door();S.inside=inside;S.vis=vis||null;const hn=S.vis&&NP.find(x=>x.id===S.vis);if(S.vis&&!hn)S.vis=null;OUT.visible=!inside;INN.visible=inside&&!S.vis;INN2.visible=inside&&!!S.vis;if(S.vis)buildHost(hn);
   if(inside)sc.background=new THREE.Color(0xcfe3ee)}
 function enterHome(){setScene(true);P.position.set(0,0,3);toast('Inside your home');store()}
 function leaveHome(){setScene(false);P.position.set(0,0,-3.4);toast('Back outside');store()}
 
 // interactables
-const A_OUT=[{x:0,z:-4,r:4.5,label:'Enter home',fn:enterHome},{x:28,z:-3.4,r:4.5,label:'Enter school',fn:schoolMenu},{x:-28,z:10.8,r:4.5,label:'University admissions',fn:uniMenu},{x:0,z:11,r:4.5,label:'Enter shop',fn:shopMenu},...[[-28,-5],[28,12]].map(([x,z])=>({x,z,r:3,label:'Neighbour\'s house',fn:()=>toast('Not your home. Yours has the yellow mat and marker.')})),...DIST.map(d=>({x:d.ox+6,z:-1,r:2.4,label:'Bus stop',fn:busMenu})),...DIST.filter(d=>d.ox).flatMap(d=>HP.filter(([rx,rz])=>!NP.some(n=>n.cx===d.ox+rx&&n.door[1]===(rz<3?-5:12))).map(([rx,rz])=>({x:d.ox+rx,z:rz<3?-5:12,r:3,label:"Neighbour's house",fn:()=>toast('A private home. Meet the neighbours outside first.')}))),...NP.map(n=>({x:n.door[0],z:n.door[1],r:3.5,label:n.name+"'s house",fn:()=>visitDoor(n)}))];
+const A_OUT=[{x:0,z:-4,r:4.5,label:'Enter home',fn:enterHome},{x:28,z:-3.4,r:4.5,label:'Enter school',fn:schoolMenu},{x:-28,z:10.8,r:4.5,label:'University admissions',fn:uniMenu},{x:0,z:11,r:4.5,label:'Enter shop',fn:shopMenu},...[[-28,-5],[28,12]].map(([x,z])=>({x,z,r:3,label:'Neighbour\'s house',fn:()=>toast('Not your home. Yours has the yellow mat and marker.')})),...DIST.map(d=>({x:d.ox+6,z:-1,r:2.4,label:'Bus stop',fn:busMenu})),...DIST.filter(d=>d.ox).flatMap(d=>HP.filter(([rx,rz])=>!NP.some(n=>n.cx===d.ox+rx&&n.door[1]===(rz<3?-5:12))).map(([rx,rz])=>({x:d.ox+rx,z:rz<3?-5:12,r:3,label:"Neighbour's house",fn:()=>toast('A private home at '+addr(d.ox+rx,rz)+'. Meet the neighbours outside first.')}))),...NP.map(n=>({x:n.door[0],z:n.door[1],r:3.5,label:n.name+"'s house",fn:()=>visitDoor(n)}))];
 const A_IN=[{x:-3,z:-2.8,label:'Study desk',fn:deskMenu},
  {x:3,z:-1.6,label:'Sleep until morning',fn:()=>{S.energy=100;S.t=S.t%1440<420?Math.floor(S.t/1440)*1440+420:(Math.floor(S.t/1440)+1)*1440+420;gain('hunger',-25);gain('hygiene',-10);gain('fun',-5);S.nt=S.t;toast('You slept well. It is 07:00.');store()}},
  {x:-3,z:.2,r:2.2,label:'Relax and watch TV',fn:()=>{const cz=raining()?10:0;gain('fun',30+cz);S.t+=30;toast('You relax with some TV. Fun +'+(30+cz)+(cz?' (cosy rainy day)':''));store()}},
