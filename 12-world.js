@@ -27,7 +27,6 @@ function person(color,hair,skin,o){o=o||{};skin=skin||0x8d5a3b;hair=hair||0x1d14
 function anim(g,sp,t){const u=g&&g.userData;if(!u||!u.lL)return;const a=Math.sin(t*9)*.7*sp;u.lL.rotation.x=a;u.lR.rotation.x=-a;u.aL.rotation.x=-a*.8;u.aR.rotation.x=a*.8;u.head.rotation.y=Math.sin(t*1.3)*.15*(1-sp);u.torso.scale.y=1+Math.sin(t*2.2)*.012}
 
 const outRects=[],inRects=[],acts=[],movers=[];
-// neighbourhood
 box(OUT,290,.1,90,0x6fb35a,0,-.05,0);box(OUT,290,.12,6,0x4a4f57,0,0,3);
 for(let x=-136;x<136;x+=6)box(OUT,2.5,.14,.25,0xf0f0f0,x,0,3);
 const WM=new THREE.MeshBasicMaterial({color:0x9fd0f0});const wn=(x,y,z)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1.4,1.2,.12),WM);m.position.set(x,y,z);OUT.add(m)};
@@ -51,18 +50,16 @@ DIST.forEach(d=>{box(OUT,2.6,.2,1.2,0x555555,d.ox+6,2.3,-2);box(OUT,.15,2.2,1,0x
 const mk2=[box(OUT,1.2,1.2,1.2,0xf4a261,0,5.8,12),box(OUT,1.2,1.2,1.2,0x3a86ff,28,5.8,-5),box(OUT,1.2,1.2,1.2,0x9b5de5,-28,5.8,12)];
 const marker=box(OUT,1.2,1.2,1.2,0xffd23f,0,5.8,-5);box(OUT,4,.06,3,0xffd23f,0,.09,-3.6);
 for(let i=0;i<14;i++){const x=-36+i*5.5+(i%3),z=(i%2?-20:24)+(i%4);cyl(OUT,.2,.25,1.6,0x6b4226,x,.8,z,6);const l=new THREE.Mesh(new THREE.SphereGeometry(1.3,8,6),new THREE.MeshLambertMaterial({color:0x2f8f3e}));l.position.set(x,2.4,z);OUT.add(l);}
-// life in the street: a car and two walkers (placeholder traffic/NPCs)
 const car=new THREE.Group();box(car,3,.8,1.6,0xd1332b,0,.6,0);box(car,1.6,.7,1.4,0xf5f5f5,0,1.3,0);car.position.set(-40,0,4.4);OUT.add(car);movers.push({o:car,v:6,ax:'x',min:-138,max:138,wrap:1});
 [[0x7a4bd1,-2.4,2,0,16],[0x1fa37a,8.5,-2.2,-30,30]].forEach(([c,z,v,mn,mx])=>{const n=person(c);n.position.set(mn,0,z);OUT.add(n);movers.push({o:n,v,ax:'x',min:mn,max:mx,walk:1})});
 
 NP.forEach(n=>{n.g=person(n.color,n.hair,n.skin,n.o);OUT.add(n.g)});
-// home interior
 const HFL=box(INN,10,.1,10,0xd8b98a,0,-.05,0),HW=[box(INN,10,4,.2,0xf3ead7,0,2,-5),box(INN,.2,4,10,0xf3ead7,-5,2,0),box(INN,.2,4,10,0xf3ead7,5,2,0)];
 box(INN,1.8,.04,1.2,0x2e8b57,0,.07,4.2);
-box(INN,3,1,1.4,0x8a5a2b,-3,.5,-4);box(INN,.9,.06,.6,0x333,-3,1.05,-4.1);        // desk + laptop
-box(INN,2.2,.6,3.6,0x3d6fb6,3,.3,-3.5);box(INN,1.6,.2,.6,0xffffff,3,.7,-4.9);       // bed
-box(INN,1.2,2.4,1.2,0xf4f4f4,4,1.2,2);                                            // fridge
-box(INN,3,.8,1.2,0x9b3d3d,-3.5,.4,1.5);box(INN,.15,1.2,2,0x111827,-4.85,1.8,1.5);box(INN,.8,1,.4,0x7a5230,-3.8,.5,4.2);box(INN,1.6,1,.8,0xd9d9d9,0,.5,-4.4);box(INN,.5,.06,.5,0x333333,0,1.03,-4.4);box(INN,1,2.2,1.1,0xbfe3f2,4.3,1.1,-.1);                                            // sofa
+box(INN,3,1,1.4,0x8a5a2b,-3,.5,-4);box(INN,.9,.06,.6,0x333,-3,1.05,-4.1);
+box(INN,2.2,.6,3.6,0x3d6fb6,3,.3,-3.5);box(INN,1.6,.2,.6,0xffffff,3,.7,-4.9);
+box(INN,1.2,2.4,1.2,0xf4f4f4,4,1.2,2);
+box(INN,3,.8,1.2,0x9b3d3d,-3.5,.4,1.5);box(INN,.15,1.2,2,0x111827,-4.85,1.8,1.5);box(INN,.8,1,.4,0x7a5230,-3.8,.5,4.2);box(INN,1.6,1,.8,0xd9d9d9,0,.5,-4.4);box(INN,.5,.06,.5,0x333333,0,1.03,-4.4);box(INN,1,2.2,1.1,0xbfe3f2,4.3,1.1,-.1);
 inRects.push([0,-4.4,1.4,.6],[4.3,-.1,.8,.9],[-3,-4,2.6,1.2],[3,-3.5,1.8,3.0],[4,2,.9,1.0],[-3.5,1.5,2.6,1.0]);
 
 const INN2=new THREE.Group(),hostG=new THREE.Group();sc.add(INN2);INN2.add(hostG);INN2.visible=false;
@@ -76,14 +73,13 @@ function setScene(inside,vis){SFX.door();S.inside=inside;S.vis=vis||null;const h
 function enterHome(){setScene(true);P.position.set(0,0,2.2);toast('Inside your home');store()}
 function leaveHome(){setScene(false);P.position.set(0,0,-3.4);toast('Back outside');store()}
 
-// interactables
 const A_OUT=[{x:0,z:-4,r:4.5,label:'Enter home',fn:enterHome},{x:28,z:-3.4,r:4.5,label:'Enter school',fn:schoolMenu},{x:-28,z:10.8,r:4.5,label:'University admissions',fn:uniMenu},{x:0,z:11,r:4.5,label:'Enter shop',fn:shopMenu},...[[-28,-5],[28,12]].map(([x,z])=>({x,z,r:3,label:'Neighbour\'s house',fn:()=>toast('Not your home. Yours has the yellow mat and marker.')})),...DIST.map(d=>({x:d.ox+6,z:-1,r:2.4,label:'Bus stop',fn:busMenu})),...DIST.filter(d=>d.ox).flatMap(d=>HP.filter(([rx,rz])=>!NP.some(n=>n.cx===d.ox+rx&&n.door[1]===(rz<3?-5:12))).map(([rx,rz])=>({x:d.ox+rx,z:rz<3?-5:12,r:3,label:"Neighbour's house",fn:()=>toast('A private home at '+addr(d.ox+rx,rz)+'. Meet the neighbours outside first.')}))),...NP.map(n=>({x:n.door[0],z:n.door[1],r:3.5,label:n.name+"'s house",fn:()=>visitDoor(n)}))];
 const A_IN=[{x:-3,z:-2.8,label:'Study desk',fn:deskMenu},
  {x:3,z:-1.6,label:'Sleep until morning',fn:()=>{S.energy=100;S.t=S.t%1440<420?Math.floor(S.t/1440)*1440+420:(Math.floor(S.t/1440)+1)*1440+420;gain('hunger',-25);gain('hygiene',-10);gain('fun',-5);S.nt=S.t;toast('You slept well. It is 07:00.');store()}},
- {x:-3,z:.2,r:2.2,label:'Relax and watch TV',fn:()=>{const cz=raining()?10:0;gain('fun',30+cz);S.t+=30;toast('You relax with some TV. Fun +'+(30+cz)+(cz?' (cosy rainy day)':''));store()}},
+ {x:-3,z:.2,r:2.2,label:'Watch TV',fn:tvMenu},
  {x:2.8,z:-.1,r:1.9,label:'Take a shower',fn:()=>{gain('hygiene',70);S.t+=15;toast('Fresh and clean. Hygiene +70');store()}},
- {x:4,z:.7,label:'Eat a meal',fn:()=>{S.energy=Math.min(100,S.energy+15);S.t+=20;gain('hunger',40);toast('Your family fed you. Hunger +40, energy +15');store()}},
+ {x:4,z:.7,label:'Check fridge',fn:()=>{S.food=S.food||{};const s=Object.keys(S.food).filter(k=>S.food[k]>0).map(k=>k+'x'+S.food[k]).join(', ')||'empty';toast('Fridge: '+s)}},
  {x:-3.2,z:3.2,r:1.7,label:'Decorate home',fn:decoMenu},
- {x:0,z:-3.2,r:1.6,label:'Cook a meal (£2)',fn:cook},
+ {x:0,z:-3.2,r:1.6,label:'Cook a meal',fn:cookMenu},
  {x:0,z:-.9,r:1.5,label:'Exercise',fn:workout},
  {x:0,z:3.6,label:'Leave home',fn:leaveHome}];
