@@ -27,30 +27,27 @@ function person(color,hair,skin,o){o=o||{};skin=skin||0x8d5a3b;hair=hair||0x1d14
 function anim(g,sp,t){const u=g&&g.userData;if(!u||!u.lL)return;const a=Math.sin(t*9)*.7*sp;u.lL.rotation.x=a;u.lR.rotation.x=-a;u.aL.rotation.x=-a*.8;u.aR.rotation.x=a*.8;u.head.rotation.y=Math.sin(t*1.3)*.15*(1-sp);u.torso.scale.y=1+Math.sin(t*2.2)*.012}
 
 const outRects=[],inRects=[],acts=[],movers=[];
-box(OUT,290,.1,90,0x6fb35a,0,-.05,0);box(OUT,290,.12,6,0x4a4f57,0,0,3);
-for(let x=-136;x<136;x+=6)box(OUT,2.5,.14,.25,0xf0f0f0,x,0,3);
+box(OUT,320,.1,110,0x6fb35a,0,-.05,0);box(OUT,320,.12,6,0x4a4f57,0,0,3);
+for(let x=-150;x<150;x+=6)box(OUT,2.5,.14,.25,0xf0f0f0,x,0,3);
 const WM=new THREE.MeshBasicMaterial({color:0x9fd0f0});const wn=(x,y,z)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1.4,1.2,.12),WM);m.position.set(x,y,z);OUT.add(m)};
-const HC=[0xffd9a0,0xb9d9ff,0xd9f2b9,0xf2c6d9,0xe3d3ff];
-[[0,-8,0xffd9a0],[-14,-8,0xb9d9ff],[14,-8,0xd9f2b9],[-14,15,0xf2c6d9],[14,15,0xe3d3ff],[-28,-8,0xffe6a8],[28,15,0xc9e8e0]].forEach(([x,z,c])=>{
-  box(OUT,8,4,6,c,x,2,z);box(OUT,9,1,7,0xb5523b,x,4.5,z);outRects.push([x,z,8,6]);
-  const fz=z<3?z+3:z-3;box(OUT,1.4,2.4,.2,0x6b4226,x,1.2,fz+(z<3?.05:-.05));const sg=z<3?1:-1;[-2.4,2.4].forEach(d=>wn(x+d,2.4,fz+.07*sg));[-3.2,3.2].forEach((d,i)=>{const f=new THREE.Mesh(new THREE.SphereGeometry(.28,6,6),new THREE.MeshLambertMaterial({color:i?0xff6b9a:0xffd23f}));f.position.set(x+d,.3,fz+sg);OUT.add(f)});});
+// Landmark buildings (player home area, school, uni, shop)
+[[0,-8,0xffd9a0]].forEach(([x,z,c])=>{box(OUT,8,4,6,c,x,2,z);box(OUT,9,1,7,0xb5523b,x,4.5,z);outRects.push([x,z,8,6]);const fz=z+3;box(OUT,1.4,2.4,.2,0x6b4226,x,1.2,fz+.05);[-2.4,2.4].forEach(d=>wn(x+d,2.4,fz+.07));});
 box(OUT,10,4,7,0x6fa8dc,28,2,-8);box(OUT,11,1,8,0x274c77,28,4.5,-8);outRects.push([28,-8,10,7]);box(OUT,1.8,2.6,.2,0x2b2b2b,28,1.3,-4.45);box(OUT,4,.06,3,0x3a86ff,28,.09,-3.4);
 box(OUT,10,4,7,0xc9b6e8,-28,2,15);box(OUT,11,1,8,0x5a3d8a,-28,4.5,15);outRects.push([-28,15,10,7]);box(OUT,1.8,2.6,.2,0x2b2b2b,-28,1.3,11.55);box(OUT,4,.06,3,0x9b5de5,-28,.09,10.4);
-Array.from({length:16},(_,i)=>-120+i*16).forEach(x=>{cyl(OUT,.08,.1,4,0x333333,x,2,-.9,6);const b=new THREE.Mesh(new THREE.SphereGeometry(.3,8,6),new THREE.MeshBasicMaterial({color:0xfff2b0}));b.position.set(x,4.1,-.9);OUT.add(b)});
+Array.from({length:20},(_,i)=>-140+i*14).forEach(x=>{cyl(OUT,.08,.1,4,0x333333,x,2,-.9,6);const b=new THREE.Mesh(new THREE.SphereGeometry(.3,8,6),new THREE.MeshBasicMaterial({color:0xfff2b0}));b.position.set(x,4.1,-.9);OUT.add(b)});
 box(OUT,8,4,6,0xf4a261,0,2,15);box(OUT,9,1,7,0x9c4a1a,0,4.5,15);outRects.push([0,15,8,6]);box(OUT,1.4,2.4,.2,0x6b4226,0,1.2,11.95);box(OUT,4,.06,3,0xf4a261,0,.09,10.6);box(OUT,6,.8,.3,0xfff1d0,0,3.3,11.8);
 const DIST=[{n:'Hillcrest Gardens',code:'HG',st:['Hillcrest Rise','Orchard Lane'],ox:-90,gr:0x86a55a,wall:[0xc9a27e,0xb08968,0xd8c3a5,0xa68a64,0xbfa58a],roof:0x6b3f2a},{n:'Maple Close',code:'MC',st:['Maple Close','Elm Road'],ox:0},{n:'Riverside Terrace',code:'RT',st:['River Walk','Wharf Street'],ox:90,gr:0x7ab8a0,wall:[0xf4f1ea,0xdfe9f2,0xe8e0f0,0xd7ecec,0xfbe9d0],roof:0x3b6ea5}];
-const areaOf=x=>DIST.find(d=>Math.abs(x-d.ox)<=45)||DIST[1];
-const addr=(x,z)=>{const d=areaOf(x),i=[-28,-14,0,14,28].indexOf(Math.round(x-d.ox)),no=z<3;return `${no?2*(i+1):2*i+1} ${d.st[no?0:1]}, ${d.n}`};
+const areaOf=x=>DIST.find(d=>Math.abs(x-d.ox)<=50)||DIST[1];
+const addr=(x,z)=>{const d=areaOf(x);const cols=[-42,-28,-14,0,14,28,42];let i=cols.indexOf(Math.round(x-d.ox));if(i<0)i=3;const no=z<3;return (no?2*(i+1):2*i+1)+' '+(d.st[no?0:1]||d.n)+', '+d.n};
 function house(x,z,c,roof){box(OUT,8,4,6,c,x,2,z);box(OUT,9,1,7,roof,x,4.5,z);outRects.push([x,z,8,6]);const fz=z<3?z+3:z-3,sg=z<3?1:-1;box(OUT,1.4,2.4,.2,0x6b4226,x,1.2,fz+.05*sg);[-2.4,2.4].forEach(d=>wn(x+d,2.4,fz+.07*sg))}
-const HP=[[-28,-8],[-14,-8],[0,-8],[14,-8],[28,-8],[-28,15],[-14,15],[0,15],[14,15],[28,15]];
-DIST.filter(d=>d.ox).forEach(d=>{box(OUT,84,.04,84,d.gr,d.ox,.01,0);HP.forEach(([rx,rz],i)=>house(d.ox+rx,rz,d.wall[i%5],d.roof));
-  for(let i=0;i<7;i++){const x=d.ox-36+i*12,z=i%2?-22:24;cyl(OUT,.2,.25,1.6,0x6b4226,x,.8,z,6);const l=new THREE.Mesh(new THREE.SphereGeometry(1.3,8,6),new THREE.MeshLambertMaterial({color:0x2f8f3e}));l.position.set(x,2.4,z);OUT.add(l)}});
+const HP=[[-42,-22],[-28,-22],[-14,-22],[0,-22],[14,-22],[28,-22],[42,-22],[-42,-8],[-28,-8],[-14,-8],[0,-8],[14,-8],[28,-8],[42,-8],[-42,15],[-28,15],[-14,15],[0,15],[14,15],[28,15],[42,15],[-42,28],[-28,28],[-14,28],[0,28],[14,28],[28,28],[42,28]];
+DIST.forEach(d=>{if(d.gr)box(OUT,100,.04,100,d.gr,d.ox,.01,3);const walls=d.wall||[0xffd9a0,0xb9d9ff,0xd9f2b9,0xf2c6d9,0xe3d3ff],roof=d.roof||0xb5523b;HP.forEach(([rx,rz],i)=>{if(d.ox===0&&rx===0&&rz===-8)return;house(d.ox+rx,rz,walls[i%walls.length],roof)});for(let i=0;i<9;i++){const x=d.ox-48+i*12,z=i%2?-30:34;cyl(OUT,.2,.25,1.6,0x6b4226,x,.8,z,6);const l=new THREE.Mesh(new THREE.SphereGeometry(1.3,8,6),new THREE.MeshLambertMaterial({color:0x2f8f3e}));l.position.set(x,2.4,z);OUT.add(l)}});
 box(OUT,80,.05,6,0x4aa3df,90,.03,-30);outRects.push([90,-30,80,6]);
 DIST.forEach(d=>{box(OUT,2.6,.2,1.2,0x555555,d.ox+6,2.3,-2);box(OUT,.15,2.2,1,0x555555,d.ox+4.8,1.1,-2);box(OUT,.15,2.2,1,0x555555,d.ox+7.2,1.1,-2);box(OUT,2.2,.9,.1,0xd1332b,d.ox+6,1.2,-2.5)});
 const mk2=[box(OUT,1.2,1.2,1.2,0xf4a261,0,5.8,12),box(OUT,1.2,1.2,1.2,0x3a86ff,28,5.8,-5),box(OUT,1.2,1.2,1.2,0x9b5de5,-28,5.8,12)];
 const marker=box(OUT,1.2,1.2,1.2,0xffd23f,0,5.8,-5);box(OUT,4,.06,3,0xffd23f,0,.09,-3.6);
-for(let i=0;i<14;i++){const x=-36+i*5.5+(i%3),z=(i%2?-20:24)+(i%4);cyl(OUT,.2,.25,1.6,0x6b4226,x,.8,z,6);const l=new THREE.Mesh(new THREE.SphereGeometry(1.3,8,6),new THREE.MeshLambertMaterial({color:0x2f8f3e}));l.position.set(x,2.4,z);OUT.add(l);}
-const car=new THREE.Group();box(car,3,.8,1.6,0xd1332b,0,.6,0);box(car,1.6,.7,1.4,0xf5f5f5,0,1.3,0);car.position.set(-40,0,4.4);OUT.add(car);movers.push({o:car,v:6,ax:'x',min:-138,max:138,wrap:1});
+for(let i=0;i<18;i++){const x=-48+i*5.5+(i%3),z=(i%2?-24:28)+(i%4);cyl(OUT,.2,.25,1.6,0x6b4226,x,.8,z,6);const l=new THREE.Mesh(new THREE.SphereGeometry(1.3,8,6),new THREE.MeshLambertMaterial({color:0x2f8f3e}));l.position.set(x,2.4,z);OUT.add(l);}
+const car=new THREE.Group();box(car,3,.8,1.6,0xd1332b,0,.6,0);box(car,1.6,.7,1.4,0xf5f5f5,0,1.3,0);car.position.set(-40,0,4.4);OUT.add(car);movers.push({o:car,v:6,ax:'x',min:-150,max:150,wrap:1});
 [[0x7a4bd1,-2.4,2,0,16],[0x1fa37a,8.5,-2.2,-30,30]].forEach(([c,z,v,mn,mx])=>{const n=person(c);n.position.set(mn,0,z);OUT.add(n);movers.push({o:n,v,ax:'x',min:mn,max:mx,walk:1})});
 
 NP.forEach(n=>{n.g=person(n.color,n.hair,n.skin,n.o);OUT.add(n.g)});
@@ -73,7 +70,7 @@ function setScene(inside,vis){SFX.door();S.inside=inside;S.vis=vis||null;const h
 function enterHome(){setScene(true);P.position.set(0,0,2.2);toast('Inside your home');store()}
 function leaveHome(){setScene(false);P.position.set(0,0,-3.4);toast('Back outside');store()}
 
-const A_OUT=[{x:0,z:-4,r:4.5,label:'Enter home',fn:enterHome},{x:28,z:-3.4,r:4.5,label:'Enter school',fn:schoolMenu},{x:-28,z:10.8,r:4.5,label:'University admissions',fn:uniMenu},{x:0,z:11,r:4.5,label:'Enter shop',fn:shopMenu},...[[-28,-5],[28,12]].map(([x,z])=>({x,z,r:3,label:'Neighbour\'s house',fn:()=>toast('Not your home. Yours has the yellow mat and marker.')})),...DIST.map(d=>({x:d.ox+6,z:-1,r:2.4,label:'Bus stop',fn:busMenu})),...DIST.filter(d=>d.ox).flatMap(d=>HP.filter(([rx,rz])=>!NP.some(n=>n.cx===d.ox+rx&&n.door[1]===(rz<3?-5:12))).map(([rx,rz])=>({x:d.ox+rx,z:rz<3?-5:12,r:3,label:"Neighbour's house",fn:()=>toast('A private home at '+addr(d.ox+rx,rz)+'. Meet the neighbours outside first.')}))),...NP.map(n=>({x:n.door[0],z:n.door[1],r:3.5,label:n.name+"'s house",fn:()=>visitDoor(n)}))];
+const A_OUT=[{x:0,z:-4,r:4.5,label:'Enter home',fn:enterHome},{x:28,z:-3.4,r:4.5,label:'Enter school',fn:schoolMenu},{x:-28,z:10.8,r:4.5,label:'University admissions',fn:uniMenu},{x:0,z:11,r:4.5,label:'Enter shop',fn:shopMenu},...DIST.map(d=>({x:d.ox+6,z:-1,r:2.4,label:'Bus stop',fn:busMenu})),...NP.map(n=>({x:n.door[0],z:n.door[1],r:3.5,label:n.name+"'s house",fn:()=>visitDoor(n)}))];
 const A_IN=[{x:-3,z:-2.8,label:'Study desk',fn:deskMenu},
  {x:3,z:-1.6,label:'Sleep until morning',fn:()=>{S.energy=100;S.t=S.t%1440<420?Math.floor(S.t/1440)*1440+420:(Math.floor(S.t/1440)+1)*1440+420;gain('hunger',-25);gain('hygiene',-10);gain('fun',-5);S.nt=S.t;toast('You slept well. It is 07:00.');store()}},
  {x:-3,z:.2,r:2.2,label:'Watch TV',fn:tvMenu},
