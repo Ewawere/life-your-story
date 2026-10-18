@@ -26,21 +26,6 @@ function cook(){
   S.cash-=2;const c=S.sk.cook,h=30+Math.round(c*.4);gain('hunger',h);gain('fun',5);S.sk.cook=Math.min(100,c+4*(1-c/120));S.t+=30;SFX.ok();toast('You cooked. Hunger +'+h+' · Cooking skill '+Math.round(S.sk.cook));store();
 }
 function workout(){
-  if(S.energy<15){toast('Too tired to exercise');SFX.bad();return}
-  S.energy-=12;const f=S.sk.fit,g=8+Math.round(f*.15);gain('fun',g);S.sk.fit=Math.min(100,f+3*(1-f/120));S.t+=25;SFX.ok();toast('Workout done. Fun +'+g+' · Fitness '+Math.round(S.sk.fit));store();
-}
-const comfort=()=>(S.deco?S.deco.length:0)*.4+(S.paint&&S.paint.wall!=='#f3ead7'?1:0);
-function ML(m){return m>70?'😊':m>40?'😐':'😔'}
-function mood(){const N=S.need;return (N.hunger+N.fun+N.social+N.hygiene)/4}
-function gain(k,v){if(S.need[k]!=null)S.need[k]=cl(S.need[k]+v)}
-function cl(v){return Math.max(0,Math.min(100,v))}
-function lifeEvent(){
-  const evs=[
-    ()=>{gain('fun',15);toast('You found £5 on the pavement!');S.cash+=5;SFX.chime()},
-    ()=>{gain('social',10);toast('A neighbour waved and said hello. Social +10')},
-    ()=>{gain('fun',-8);toast('You stubbed your toe. Ouch. Fun -8');SFX.bad()},
-    ()=>{if(S.cash>=3){S.cash-=3;gain('fun',12);toast('Impulse snack. £3 · Fun +12')}else toast('You wanted a snack but had no cash')},
-    ()=>{gain('hygiene',-10);toast('It started raining and you got a bit wet. Hygiene -10')},
-  ];
-  pick(evs)();S.evT=S.t+rnd(180,400);store();
+  if(S.energy<20){toast('Too tired to exercise');SFX.bad();return}
+  const f=S.sk.fit;S.sk.fit=Math.min(100,f+3*(1-f/120));S.energy-=12;gain('hygiene',-10);gain('fun',10);S.t+=40;SFX.ok();toast('Good workout! Fitness '+Math.round(S.sk.fit));store();
 }
