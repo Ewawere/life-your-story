@@ -42,25 +42,24 @@ function pFood(){modal('<h3>Food delivery</h3><p class="m">Arrives in about 30 m
 function order(i){const m=MEALS[i];if(S.cash<m[1]){toast('Not enough cash');SFX.bad();return}S.cash-=m[1];gain('hunger',m[2]);gain('fun',m[3]);S.t+=30;SFX.ok();store();toast(m[0]+' delivered. Hunger +'+m[2]);pFood()}
 function busMenu(){modal('<h3>Bus stop</h3><p class="m">You are in '+areaOf(P.position.x).n+'. Single fare '+gbp(2)+', about 20 minutes.</p>'+DIST.map((d,i)=>d.n===areaOf(P.position.x).n?'':'<button class="o" onclick="ride('+i+')">Take the bus to '+d.n+'</button>').join(''),true)}
 function ride(i){if(S.cash<2){toast('You need £2 for the fare');SFX.bad();return}S.cash-=2;S.t+=20;const d=DIST[i];P.position.set(d.ox+6,0,-.6);S.area=d.n;closeM();toast('Arrived in '+d.n);SFX.door();store()}
-// ===== Activity system (TV, cooking, etc.) =====
 let ACT=null;
-const SHOWS=[['Soap Opera',25,20,'A dramatic episode keeps you hooked.'],['Comedy Show',35,25,'You laugh until your sides hurt.'],['Nature Doc',30,30,'Beautiful animals and calm narration.'],['Football Match',40,35,'Your team scores in the final minute!'],['News Bulletin',15,15,'You catch up on what is happening.']];
+const SHOWS=[['Soap Opera',25,5,'A dramatic episode keeps you hooked.'],['Comedy Show',35,6,'You laugh until your sides hurt.'],['Nature Doc',30,7,'Beautiful animals and calm narration.'],['Football Match',40,8,'Your team scores in the final minute!'],['News Bulletin',15,4,'You catch up on what is happening.']];
 function tvMenu(){
   if(ACT){toast('You are already busy');return}
-  modal('<h3>What to watch?</h3><p class="m">Pick a show</p>'+SHOWS.map((s,i)=>'<button class="o" onclick="startTV('+i+')">'+s[0]+' <span class="m">· '+s[2]+' min · Fun +'+s[1]+'</span></button>').join('')+'<button class="o" onclick="closeM()">Cancel</button>',true);
+  modal('<h3>What to watch?</h3><p class="m">Pick a show</p>'+SHOWS.map((s,i)=>'<button class="o" onclick="startTV('+i+')">'+s[0]+' <span class="m">· '+s[2]+'s · Fun +'+s[1]+'</span></button>').join('')+'<button class="o" onclick="closeM()">Cancel</button>',true);
 }
 function startTV(i){
   closeM();const s=SHOWS[i];
-  ACT={icon:'TV',label:s[0],end:S.t+s[2],done:()=>{const cz=raining()?8:0;gain('fun',s[1]+cz);toast(s[3]+' Fun +'+(s[1]+cz)+(cz?' (cosy rainy day)':''));SFX.ok();store()}};
+  ACT={icon:'TV',label:s[0],endMs:performance.now()+s[2]*1000,done:()=>{const cz=raining()?8:0;gain('fun',s[1]+cz);S.t+=s[2];toast(s[3]+' Fun +'+(s[1]+cz)+(cz?' (cosy rainy day)':''));SFX.ok();store()}};
   toast('Watching '+s[0]+'...');updateActUI();
 }
-const RECIPES=[['Scrambled eggs',{eggs:1,milk:1},35,20],['Toast & fruit',{bread:1,fruit:1},30,15],['Chicken rice',{chicken:1,rice:1,veg:1},55,35],['Pasta bowl',{pasta:1,veg:1},40,25],['Veggie stir-fry',{veg:2,rice:1},38,25]];
+const RECIPES=[['Scrambled eggs',{eggs:1,milk:1},35,5],['Toast & fruit',{bread:1,fruit:1},30,4],['Chicken rice',{chicken:1,rice:1,veg:1},55,8],['Pasta bowl',{pasta:1,veg:1},40,6],['Veggie stir-fry',{veg:2,rice:1},38,6]];
 function cookMenu(){
   if(ACT){toast('You are already busy');return}
   S.food=S.food||{};
   const has=(need)=>Object.keys(need).every(k=>(S.food[k]||0)>=need[k]);
   let html='<h3>Cook a meal</h3><p class="m">Fridge: '+(Object.keys(S.food).filter(k=>S.food[k]>0).map(k=>k+'x'+S.food[k]).join(', ')||'empty')+'</p>';
-  RECIPES.forEach((r,i)=>{const ok=has(r[1]);const need=Object.keys(r[1]).map(k=>k+'x'+r[1][k]).join(', ');html+='<button class="o" onclick="startCook('+i+')" '+(ok?'':'style="opacity:.45"')+'>'+r[0]+' <span class="m">· '+need+' · '+r[3]+' min</span></button>'});
+  RECIPES.forEach((r,i)=>{const ok=has(r[1]);const need=Object.keys(r[1]).map(k=>k+'x'+r[1][k]).join(', ');html+='<button class="o" onclick="startCook('+i+')" '+(ok?'':'style="opacity:.45"')+'>'+r[0]+' <span class="m">· '+need+' · '+r[3]+'s</span></button>'});
   html+='<p class="m">Buy groceries at the orange shop first.</p><button class="o" onclick="closeM()">Cancel</button>';
   modal(html,true);
 }
@@ -69,20 +68,20 @@ function startCook(i){
   for(const k in r[1]){if((S.food[k]||0)<r[1][k]){toast('Missing ingredients');SFX.bad();return}}
   for(const k in r[1])S.food[k]-=r[1][k];
   closeM();const skill=S.sk.cook||0;
-  ACT={icon:'Cook',label:r[0],end:S.t+r[3],done:()=>{const h=r[2]+Math.round(skill*.35);gain('hunger',h);gain('fun',8);S.sk.cook=Math.min(100,skill+5*(1-skill/120));S.energy=Math.min(100,S.energy+10);toast('Cooked '+r[0]+'! Hunger +'+h+' · Cooking '+Math.round(S.sk.cook));SFX.ok();store()}};
+  ACT={icon:'Cook',label:r[0],endMs:performance.now()+r[3]*1000,done:()=>{const h=r[2]+Math.round(skill*.35);gain('hunger',h);gain('fun',8);S.sk.cook=Math.min(100,skill+5*(1-skill/120));S.energy=Math.min(100,S.energy+10);S.t+=r[3];toast('Cooked '+r[0]+'! Hunger +'+h+' · Cooking '+Math.round(S.sk.cook));SFX.ok();store()}};
   toast('Cooking '+r[0]+'...');updateActUI();store();
 }
 function updateActUI(){
   let el=document.getElementById('actChip');
   if(!ACT){if(el)el.remove();return}
   if(!el){el=document.createElement('div');el.id='actChip';el.className='chip';el.style.cssText='position:fixed;top:calc(12px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:6;pointer-events:none';document.body.appendChild(el)}
-  const left=Math.max(0,Math.ceil(ACT.end-S.t));
-  el.innerHTML=ACT.icon+' '+ACT.label+' · '+left+'m';
+  const left=Math.max(0,Math.ceil((ACT.endMs-performance.now())/1000));
+  el.innerHTML=ACT.icon+' '+ACT.label+' · '+left+'s';
 }
-function tickAct(){if(!ACT)return;updateActUI();if(S.t>=ACT.end){const d=ACT.done;ACT=null;updateActUI();d()}}
+function tickAct(){if(!ACT)return;updateActUI();if(performance.now()>=ACT.endMs){const d=ACT.done;ACT=null;updateActUI();d()}}
 function workout(){
   if(ACT){toast('You are already busy');return}
   if(S.energy<20){toast('Too tired to exercise');SFX.bad();return}
-  ACT={icon:'Gym',label:'Workout',end:S.t+25,done:()=>{const f=S.sk.fit||0;S.sk.fit=Math.min(100,f+3*(1-f/120));S.energy-=12;gain('hygiene',-10);gain('fun',12);toast('Good workout! Fitness '+Math.round(S.sk.fit));SFX.ok();store()}};
+  ACT={icon:'Gym',label:'Workout',endMs:performance.now()+6*1000,done:()=>{const f=S.sk.fit||0;S.sk.fit=Math.min(100,f+3*(1-f/120));S.energy-=12;gain('hygiene',-10);gain('fun',12);S.t+=6;toast('Good workout! Fitness '+Math.round(S.sk.fit));SFX.ok();store()}};
   toast('Working out...');updateActUI();
 }
