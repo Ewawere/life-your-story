@@ -8,7 +8,7 @@ const YEAR=14,age=()=>16+Math.floor(day()/YEAR); // one year = 14 game days
 function birthday(){
   const gift={Low:20,Middle:50,Wealthy:150}[S.fam.cls],fr=NP.filter(n=>rel(n.id).f>=40);
   S.cash+=gift;fr.forEach(n=>{const r=rel(n.id);r.f=Math.min(100,r.f+3)});gain('fun',25);gain('social',15);SFX.chime();store();
-  modal(`<h3>Happy birthday, ${S.name}!</h3><p>You are now <b>${S.age}</b>.</p><p>Your family bakes a cake and gives you <b>${gbp(gift)}</b>. Fun +25, social +15.</p>`+(fr.length?`<p>${fr.map(n=>n.name).join(', ')} remembered and sent wishes. Friendship +3.</p>`:'<p class="m">No neighbour knows you well enough yet to remember.</p>`),true);
+  modal('<h3>Happy birthday, '+S.name+'!</h3><p>You are now <b>'+S.age+'</b>.</p><p>Your family bakes a cake and gives you <b>'+gbp(gift)+'</b>. Fun +25, social +15.</p>'+(fr.length?'<p>'+fr.map(n=>n.name).join(', ')+' remembered and sent wishes. Friendship +3.</p>':'<p class="m">No neighbour knows you well enough yet to remember.</p>'),true);
 }
 const nstat=n=>({sleep:'asleep',away:'at school or work until 14:00',home:'at home',out:'out walking in '+areaOf(n.cx).n})[nstate(n)];
 function phone(){modal(`<h3>📱 Phone</h3><p class="m">Balance ${gbp(S.cash)} · ${areaOf(P.position.x).n}</p><button class="o" onclick="pMsgs()">Messages${(S.inbox||[]).length?' ('+S.inbox.length+')':''}</button><button class="o" onclick="pContacts()">Contacts</button><button class="o" onclick="pMap()">Maps</button><button class="o" onclick="pFood()">Food delivery</button>`,true)}
