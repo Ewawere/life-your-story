@@ -35,7 +35,7 @@ function update(dt){
     n.g.rotation.y=n.k>.5?Math.atan2(P.position.x-n.g.position.x,P.position.z-n.g.position.z):(Math.cos(a)>0?1.57:-1.57);anim(n.g,n.k>.97?0:1,tt+n.ph)}});
   anim(P.children[0],mvSp,tt);if(S.vis)anim(hostG.children[0],0,tt);if(!S.inside)chatter();updateBubbles(now);
   if(!S.inside){const ar=areaOf(P.position.x).n;if(S.area==null)S.area=ar;else if(ar!==S.area){S.area=ar;toast('Welcome to '+ar)}}
-  if(!S.inside&&!modalOpen)NP.forEach(n=>{if(n.g.visible&&Math.hypot(n.g.position.x-P.position.x,n.g.position.z-P.position.z)<9){const r=rel(n.id);if((r.say==null?-999:r.say)<S.t-240){r.say=S.t;n.appr=performance.now()+7000;say(n,pick(GREET[r.f<20?0:r.f<40?1:2]))}});
+  if(!S.inside&&!modalOpen)NP.forEach(n=>{if(n.g.visible&&Math.hypot(n.g.position.x-P.position.x,n.g.position.z-P.position.z)<9){const r=rel(n.id);if((r.say==null?-999:r.say)<S.t-240){r.say=S.t;n.appr=performance.now()+7000;say(n,pick(GREET[r.f<20?0:r.f<40?1:2]))}}});
   if(S.msgT==null)S.msgT=S.t+240;if(S.t>=S.msgT&&!modalOpen&&!S.vis){S.msgT=S.t+rnd(240,420);texting()}
   $('phoneBtn').textContent=(S.inbox||[]).length?'📱●':'📱';
   if(S.vis&&hr()>=22){toast('It is late. Time to go home.');leaveVisit()}
