@@ -76,6 +76,7 @@ const A_IN=[{x:-3,z:-2.8,label:'Study desk',fn:deskMenu},
  {x:2.8,z:-.1,r:1.9,label:'Take a shower',fn:()=>{gain('hygiene',70);S.t+=15;toast('Fresh and clean. Hygiene +70');store()}},
  {x:4,z:.7,label:'Check fridge',fn:()=>{S.food=S.food||{};const s=Object.keys(S.food).filter(k=>S.food[k]>0).map(k=>k+'x'+S.food[k]).join(', ')||'empty';toast('Fridge: '+s)}},
  {x:-3.2,z:3.2,r:1.7,label:'Decorate home',fn:decoMenu},
+ {x:-2,z:2,r:1.5,label:'Do chores',fn:choresMenu},
  {x:0,z:-3.2,r:1.6,label:'Cook a meal',fn:cookMenu},
  {x:0,z:-.9,r:1.5,label:'Exercise',fn:workout},
  {x:0,z:3.6,label:'Leave home',fn:leaveHome}];
