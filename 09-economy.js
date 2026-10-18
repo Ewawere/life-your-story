@@ -10,7 +10,6 @@ function shopMenu(){
   GROC.forEach((g,i)=>{html+='<button class="o" onclick="buyGroc('+i+')">'+g[0]+' <span class="m">· '+gbp(g[1])+'</span></button>'});
   html+='<p class="m"><b>Ready to eat</b></p>';
   ITEMS.forEach((it,i)=>{html+='<button class="o" onclick="buy('+i+')">'+it[0]+' <span class="m">· '+gbp(it[1])+'</span></button>'});
-  html+='<button class="o go" onclick="jobsMenu()">Looking for work?</button>';
   html+='<p class="m">Shirts: '+gbp(SHIRT)+' each</p>';
   COLORS.forEach(c=>{html+='<button class="o" style="border-left:16px solid '+c+'" onclick="shirt(\''+c+'\')">'+(S.shirts.includes(c)?(S.color===c?'Wearing now':'Wear this'):'Buy shirt')+'</button>'});
   modal(html,true);
@@ -40,18 +39,18 @@ function renderDeco(){if(decoG)INN.remove(decoG);decoG=new THREE.Group();INN.add
   if(D.includes('speaker')){box(decoG,.4,.6,.3,0x222222,-4.5,.4,3.5);box(decoG,.3,.3,.2,0x444444,-4.5,.9,3.5)}
   if(D.includes('mirror'))box(decoG,.8,1.2,.05,0xaaccff,4.7,2.2,1.5);
 }
-// ===== Jobs, chores, betting =====
-const JOBS=[
-  {id:'shop',name:'Shop assistant',pay:12,mins:8,energy:12,where:'shop',hours:[15,20],desc:'Stack shelves at Singh\'s.'},
-  {id:'deliver',name:'Food delivery',pay:15,mins:10,energy:18,where:'phone',hours:[16,21],desc:'Deliver meals around town.'},
-  {id:'tutor',name:'Tutor a neighbour kid',pay:18,mins:12,energy:10,where:'phone',hours:[16,19],needFriend:30,desc:'Help with homework. Need a friend.'},
-  {id:'carwash',name:'Car wash',pay:10,mins:6,energy:14,where:'street',hours:[10,18],desc:'Wash cars near the bus stop.'}
+// ===== Player work jobs, chores, betting (phone) =====
+const WORK_JOBS=[
+  {id:'shop',name:'Shop assistant',pay:12,mins:8,energy:12,hours:[15,20],desc:'Stack shelves at Singh\'s.'},
+  {id:'deliver',name:'Food delivery',pay:15,mins:10,energy:18,hours:[16,21],desc:'Deliver meals around town.'},
+  {id:'tutor',name:'Tutor a neighbour kid',pay:18,mins:12,energy:10,hours:[16,19],needFriend:30,desc:'Help with homework. Need a friend.'},
+  {id:'carwash',name:'Car wash',pay:10,mins:6,energy:14,hours:[10,18],desc:'Wash cars near the bus stop.'}
 ];
 function jobsMenu(){
   const h=hr();
   S.jobDay=S.jobDay||{};
-  let html='<h3>Make money</h3><p class="m">Cash '+gbp(S.cash)+' · Energy '+Math.round(S.energy)+'</p>';
-  JOBS.forEach((j,i)=>{
+  let html='<h3>Jobs</h3><p class="m">Cash '+gbp(S.cash)+' · Energy '+Math.round(S.energy)+'</p>';
+  WORK_JOBS.forEach((j,i)=>{
     const done=S.jobDay[j.id]===day();
     const open=h>=j.hours[0]&&h<j.hours[1];
     let lock='';
@@ -61,11 +60,11 @@ function jobsMenu(){
     const ok=!done&&open&&!(j.needFriend&&!NP.some(n=>rel(n.id).f>=j.needFriend));
     html+='<button class="o" onclick="startJob('+i+')" '+(ok?'':'style="opacity:.45"')+'><b>'+j.name+'</b> · '+gbp(j.pay)+'<br><span class="m">'+j.desc+lock+'</span></button>';
   });
-  html+='<button class="o" onclick="closeM()">Close</button>';
+  html+='<button class="o" onclick="phone()">Back</button>';
   modal(html,true);
 }
 function startJob(i){
-  const j=JOBS[i];const h=hr();
+  const j=WORK_JOBS[i];const h=hr();
   S.jobDay=S.jobDay||{};
   if(S.jobDay[j.id]===day()){toast('Already did that today');SFX.bad();return}
   if(h<j.hours[0]||h>=j.hours[1]){toast('Not available now');SFX.bad();return}
@@ -107,7 +106,7 @@ function betMenu(){
     '<button class="o" onclick="betCoinMenu()">Coin flip (x1.9)</button>'+
     '<button class="o" onclick="betNumMenu()">Pick a number 1–5 (x4)</button>'+
     '<button class="o" onclick="betMatchMenu()">Street match bet (x2.2)</button>'+
-    '<button class="o" onclick="closeM()">Close</button>',true);
+    '<button class="o" onclick="phone()">Back</button>',true);
 }
 function betCoinMenu(){
   modal('<h3>Coin flip</h3><p class="m">Stake:</p>'+
