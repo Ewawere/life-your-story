@@ -1,7 +1,7 @@
 /* ===== main loop (main.js) ===== */
 const blocked=(x,z,rs)=>rs.some(r=>Math.abs(x-r[0])<r[2]/2+.4&&Math.abs(z-r[1])<r[3]/2+.4);
-function resize(){R.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}
-addEventListener('resize',resize);resize();
+function resize(){if(R && R.setSize){R.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}}
+addEventListener('resize',resize);try{resize()}catch(e){}
 let last=performance.now(),saveT=0;
 function update(dt){
   movers.forEach(m=>{m.o.position[m.ax]+=m.v*dt;if(m.wrap){if(m.o.position[m.ax]>m.max)m.o.position[m.ax]=m.min}else if(m.o.position[m.ax]>m.max||m.o.position[m.ax]<m.min){m.v=-m.v}
@@ -50,7 +50,7 @@ function update(dt){
   const d=S.inside?7:9,hh=S.inside?7:6;
   cam.position.set(P.position.x+Math.sin(yaw)*d,hh,P.position.z+Math.cos(yaw)*d);cam.lookAt(P.position.x,1.4,P.position.z);
 }
-function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);R.render(sc,cam);requestAnimationFrame(loop)}
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);if(R && R.render)R.render(sc,cam);requestAnimationFrame(loop)}
 requestAnimationFrame(loop);
 addEventListener('pagehide',()=>{if(S){S.x=P.position.x;S.z=P.position.z;store()}});
 newLifeScreen();
