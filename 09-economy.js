@@ -1,4 +1,4 @@
-/* ===== shop, home decoration andwardrobe (economy.js) ===== */
+/* ===== shop, home decoration and wardrobe (economy.js) ===== */
 const ITEMS=[['Hot meal',6,()=>{gain('hunger',45);S.t+=15}],['Snack',1.5,()=>{gain('hunger',15);gain('fun',10);S.t+=5}],['Cold drink',2,()=>{gain('fun',15);gain('hunger',5)}]],SHIRT=15;
 function shopMenu(){
   const h=hr();if(h<7||h>=21){modal("<h3>Singh's Corner Shop</h3><p>Open every day 07:00–21:00.</p>",true);return}
@@ -20,12 +20,12 @@ function renderDeco(){if(decoG)INN.remove(decoG);decoG=new THREE.Group();INN.add
   if(S.paint){HFL.material.color.set(S.paint.floor);HW.forEach(w=>w.material.color.set(S.paint.wall))}
   if(D.includes('rug'))box(decoG,4,.04,3,0x4a6fa5,0,.07,.4);
   if(D.includes('plant')){cyl(decoG,.3,.25,.5,0x9c5a2a,-4.4,.25,-1.5);const l=new THREE.Mesh(new THREE.SphereGeometry(.5,8,6),L(0x2f8f3e));l.position.set(-4.4,.9,-1.5);decoG.add(l)}
-  if(D.includes('lamp')){cyl(decoG,.05,.05,1.8,0x333333,4.4,.9,3.7,6);const l=new THREE.Mesh(new THREE.SphereGeometry(.35,8,6),new THREE.MeshBasicMaterial({color:0xfff0b0}));l.position.set(4.4,2,3.7);decoG.add(l)}
-  if(D.includes('poster'))box(decoG,1.6,1.2,.05,0xe76f51,0,2.5,-4.85);
-  if(D.includes('armchair'))box(decoG,1.4,1.1,1.2,0x6b4226,-3.8,.55,3.2);
-  if(D.includes('bookshelf')){box(decoG,1.8,2.2,.4,0x8a5a2b,4.2,1.1,-4.6);for(let i=0;i<3;i++)box(decoG,1.6,.08,.3,0xc9a46c,4.2,.5+i*.6,-4.55)}
-  if(D.includes('fishtank')){box(decoG,1.2,.8,.5,0x88ccee,3.5,.5,3.5);box(decoG,1.1,.05,.4,0x333,3.5,.1,3.5)}
-  if(D.includes('wallart'))box(decoG,1.2,.9,.05,0xe9c46a,-1.5,2.4,-4.9);
-  if(D.includes('speaker'))cyl(decoG,.25,.25,.6,0x222,4.3,.4,1.5,8);
-  if(D.includes('mirror'))box(decoG,.8,1.2,.05,0xaaccff,4.7,2,-2);
+  if(D.includes('lamp')){cyl(decoG,.05,.05,1.8,0x333333,4.4,.9,3.2);const sh=new THREE.Mesh(new THREE.CylinderGeometry(.35,.4,.3,8),L(0xfff3c4));sh.position.set(4.4,1.9,3.2);decoG.add(sh)}
+  if(D.includes('poster'))box(decoG,1.6,1.2,.05,0x1d7874,-4.7,2.2,-2.5);
+  if(D.includes('armchair')){box(decoG,1.2,.5,1.2,0x8b4513,3.5,.3,2.5);box(decoG,1.2,.8,.3,0x8b4513,3.5,.9,3.1)}
+  if(D.includes('bookshelf')){box(decoG,1.4,2.2,.4,0x5c3a21,-4.5,1.1,1.5);box(decoG,1.2,.05,.35,0x8b5a2b,-4.5,.6,1.5);box(decoG,1.2,.05,.35,0x8b5a2b,-4.5,1.2,1.5);box(decoG,1.2,.05,.35,0x8b5a2b,-4.5,1.8,1.5)}
+  if(D.includes('fishtank')){box(decoG,1.2,.8,.5,0x88ccee,4.2,.5,-1.5);box(decoG,1.1,.05,.4,0x2266aa,4.2,.15,-1.5)}
+  if(D.includes('wallart'))box(decoG,1.4,1,.05,0xc9a46c,4.7,2.2,-3);
+  if(D.includes('speaker')){box(decoG,.4,.6,.3,0x222222,-4.5,.4,3.5);box(decoG,.3,.3,.2,0x444444,-4.5,.9,3.5)}
+  if(D.includes('mirror'))box(decoG,.8,1.2,.05,0xaaccff,4.7,2.2,1.5);
 }
