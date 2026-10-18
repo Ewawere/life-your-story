@@ -21,7 +21,7 @@ function genFamily(){
 function famHTML(){const f=S.fam;
   return `<h3>The ${f.sur} family</h3><table>
   <tr><td>Background</td><td>${f.cls}-income household</td></tr>
-  <tr><td>Home</td><td>${f.house}</td></tr>
+  <tr><td>Home</td><td>${f.house}</td></tr><tr><td>Address</td><td>${addr(0,-8)}</td></tr>
   ${f.guardians.map((g,i)=>`<tr><td>Guardian ${i+1}</td><td>${g.name}, ${g.job} (${g.trait})</td></tr>`).join('')}
   <tr><td>Siblings</td><td>${f.sibs.length?f.sibs.map(s=>s.name+' ('+s.age+')').join(', '):'None'}</td></tr>
   <tr><td>Monthly income</td><td>${gbp(f.income)}</td></tr>
