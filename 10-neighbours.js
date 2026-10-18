@@ -7,13 +7,13 @@ mkN('priya','Priya','Shy and thoughtful. Kind words make her smile.','comp','cha
 mkN('jack','Jack','Chatty and curious. Always knows the street news.','chat','day',0,14,15,0xf4a261,0xb5651d,0xf1c8a5,.5+PI,{style:'cap',hat:0x2255aa}),
 mkN('sophie','Sophie','Sporty and energetic. Loves hearing about your day.','day','chat',-90,-14,-8,0x1d7874,0x4a2c17,0xf1c8a5,1,{style:'bun'}),
 mkN('mohammed','Mohammed','Calm and generous. Enjoys a friendly chat.','chat','joke',-90,14,-8,0x355070,0x1d1410,0xa06a45,1+PI,{style:'short',glasses:1}),
-mkN('lucas','Lucas','Funny and outgoing. Always joking around.','joke','day',-90,-14,15,0xe56b6f,0x1a1a1a,0xc68642,1.5,{style:'curly'}),
-mkN('hannah','Hannah','Bookish and quiet. Appreciates a kind word.','comp','joke',-90,14,15,0x6d597a,0xb5651d,0xf1c8a5,1.5+PI,{style:'long',glasses:1,dress:1}),
+mkN('lucas','Lucas','Outgoing and playful. Jokes are his language.','joke','comp',-90,-14,15,0xe9c46a,0xb5651d,0xf1c8a5,1.5,{style:'curly'}),
+mkN('hannah','Hannah','Quiet reader. Appreciates compliments.','comp','day',-90,14,15,0x9b5de5,0x111111,0xe8b998,1.5+PI,{style:'long',dress:1}),
 mkN('mei','Mei','Ambitious student. Likes to hear how your day went.','day','chat',90,-14,-8,0xb56576,0x111111,0xe8b998,2,{style:'long'}),
-mkN('tomasz','Tomasz','Practical and dry-humoured. Loves a good joke.','joke','comp',90,14,-8,0x588157,0xb5651d,0xf1c8a5,2+PI,{style:'short'}),
+mkN('tomasz','Tomasz','Practical and direct. Prefers real talk over jokes.','chat','joke',90,14,-8,0x577590,0x4a2c17,0xf1c8a5,2+PI,{style:'short'}),
 mkN('fatima','Fatima','Warm and welcoming. Loves neighbourhood news.','chat','day',90,-14,15,0xe09f3e,0x2b1d14,0xa06a45,2.5,{style:'bun',dress:1}),
 mkN('daniel','Daniel','Easy-going musician. Appreciates a compliment.','comp','chat',90,14,15,0x3d5a80,0x4a2c17,0xf1c8a5,2.5+PI,{style:'curly',glasses:1})];
-function nstate(n){const h=hr(),wd=day()%7;if(h<7||h>=22)return'sleep';if(h>=19)return'home';if(wd<5&&h>=8&&h<14)return'away';return raining()?'home':'out'}
+function nstate(n){const h=hr();if(h>=22||h<7)return'sleep';if(h>=9&&h<14&&!raining())return'away';if(h>=19||raining())return'home';return'out'}
 const TOP={greet:['Say hello',3,'Hello! Good to see you.'],chat:['Chat about the neighbourhood',4,'You talk about the street and the weather.'],day:['Ask about their day',5,'You ask how the day has gone.'],joke:['Tell a joke',5,'You tell a joke from school.'],comp:['Give a compliment',4,'You say something kind about their style.']};
 const FL=f=>f<20?'Stranger':f<40?'Acquaintance':f<70?'Friend':'Close friend';
 function rel(id){S.rel=S.rel||{};return S.rel[id]||(S.rel[id]={f:0,d:{}})}
@@ -28,7 +28,9 @@ function talk(id,msg,you){
   const n=NP.find(x=>x.id===id),r=rel(id),f=Math.round(r.f),face=r.m==='like'?'😄':r.m==='dis'?'😕':f>=70?'😊':'🙂';
   modal(`<div style="display:flex;gap:12px;align-items:center"><div style="flex:none;width:60px;height:60px;border-radius:50%;background:${hx(n.skin)};border:5px solid ${hx(n.color)};display:flex;align-items:center;justify-content:center;font-size:28px">${face}</div><div><h3 style="margin:0">${n.name}</h3><div class="m">${n.pers}<br>${addr(n.door[0],n.door[1])}</div></div></div><p>${FL(f)} · ${f}/100</p><span class="bar" style="width:100%"><i style="width:${f}%"></i></span>${you?`<div class="you">You: "${you}"</div>`:''}<div class="sp">${msg||n.name+' smiles at you.'}</div>`+
     Object.keys(TOP).map(k=>{const dn=r.d[k]===day();return `<button class="o" ${dn?'disabled style="opacity:.5"':''} onclick="topic('${id}','${k}')">${TOP[k][0]}${dn?' (done today)':''}</button>`}).join('')+
-    (f>=40?`<p class="m">${n.name}: "Come over any evening between 19:00 and 22:00."</p>`:`<p class="m">Friendship grows slowly. Reach 40 to be invited over.</p>`),true);
+    (f>=40?`<p class="m">${n.name}: "Come over any evening between 19:00 and 22:00."</p>`:`<p class="m">Friendship grows slowly. Reach 40 to be invited over.</p>`)+
+    (f>=15?`<button class="o" onclick="closeM();openChat('${id}')">Message ${n.name}</button>`:'')+
+    `<button class="o" onclick="closeM()">Leave</button>`,true);
 }
 function topic(id,k){
   const n=NP.find(x=>x.id===id),r=rel(id),T=TOP[k],p=S.name;if(r.d[k]===day()){talk(id);return}
@@ -53,28 +55,93 @@ function updateBubbles(now){const box=$('bub');for(let i=BUB.length-1;i>=0;i--){
   if(!b.el){b.el=document.createElement('div');b.el.className='b';b.el.textContent=b.text;box.appendChild(b.el)}
   const sp=vis&&!modalOpen?toScreen(pos.x,pos.y+2.6,pos.z):null;if(sp&&sp[2]){b.el.style.display='block';b.el.style.left=sp[0]+'px';b.el.style.top=sp[1]+'px'}else b.el.style.display='none'}}
 const GREET=[['Hello there!','Morning!','Hi!'],['Hey {p}!','Oh hi {p}, got a minute?'],['{p}! Come say hi!','Hey {p}! Over here!']];
-const NCH={joke:'Did you hear the one about the bus driver?',chat:'Any news on the street today?',day:'How has your day been so far?',comp:'Love your jacket today!'},NRE=['Ha, brilliant!','Oh really? Tell me more.',"Can't complain!",'You always know what to say.'];
+const NCH={joke:'Want to hear the one about the bus driver?',chat:'Any news on the street today?',day:'How has your day been so far?',comp:'Love your jacket today!'},NRE=['Ha, brilliant!','Oh really? Tell me more.',"Can't complain!",'You always know what to say.'];
 const PAIRS=[['emily','oliver'],['priya','jack'],['sophie','mohammed'],['lucas','hannah'],['mei','tomasz'],['fatima','daniel']];
 function chatter(){PAIRS.forEach(([a,b])=>{const A=NP.find(x=>x.id===a),B=NP.find(x=>x.id===b);if(!A.g.visible||!B.g.visible)return;if(Math.hypot(A.g.position.x-B.g.position.x,A.g.position.z-B.g.position.z)>3.6)return;
   S.chat=S.chat||{};const k=a+b;if(S.t-(S.chat[k]==null?-999:S.chat[k])<180)return;S.chat[k]=S.t;
   say(A,NCH[A.likes]);setTimeout(()=>say(B,pick(NRE)),1800);
   if(rel(a).f>=50&&rel(b).f<30){rel(b).f=Math.min(30,rel(b).f+1);setTimeout(()=>say(A,'{p} is really nice. You should say hi!'),3600);store()}})}
 const TXT={joke:['Heard a great joke today. Ask me about it!','Remind me to tell you a joke next time!'],chat:['Fancy a chat on the street later?','So much news on the street today!'],day:['How is your day going?','Hope your day is going well!'],comp:['Thinking of you. Hope you are doing well!','Just wanted to say you are a lovely neighbour.']};
-function texting(){const fr=NP.filter(n=>rel(n.id).f>=25);if(!fr.length)return;const n=pick(fr);S.inbox=(S.inbox||[]).concat([{id:n.id,text:pick(TXT[n.likes]),t:S.t}]).slice(-6);toast('📱 New message from '+n.name);SFX.chime();store()}
-function pMsgs(){const L=S.inbox||[];modal('<h3>Messages</h3>'+(L.length?L.map((m,i)=>`<button class="o" onclick="pMsg(${i})"><b>${NP.find(n=>n.id===m.id).name}</b><br><span class="m">${m.text}</span></button>`).join(''):'<p class="m">No new messages.</p>')+'<button class="o" onclick="phone()">Back</button>',true)}
-function pMsg(i){const m=S.inbox[i],n=NP.find(x=>x.id===m.id);modal(`<h3>${n.name}</h3><div class="sp">${m.text}</div><button class="o" onclick="reply(${i},1)">Sounds great!</button><button class="o" onclick="reply(${i},0)">Sorry, I'm busy right now</button>`,true)}
-function reply(i,k){const m=S.inbox[i],r=rel(m.id);S.inbox.splice(i,1);if(k){r.f=Math.min(100,r.f+2);gain('social',5);toast('Reply sent. Friendship +2')}else toast('Reply sent.');S.t+=2;store();pMsgs()}
+function texting(){
+  const fr=NP.filter(n=>rel(n.id).f>=20);if(!fr.length)return;
+  const n=pick(fr);
+  S.inbox=S.inbox||[];S.chatLog=S.chatLog||{};S.chatLog[n.id]=S.chatLog[n.id]||[];
+  const msg=pick(TXT[n.likes]||TXT.chat);
+  S.inbox.push({id:n.id,text:msg,t:S.t});
+  S.chatLog[n.id].push({from:'them',t:msg});
+  if(S.inbox.length>8)S.inbox=S.inbox.slice(-8);
+  toast('New message from '+n.name);SFX.chime();store();
+}
+function pMsgs(){
+  S.chatLog=S.chatLog||{};S.inbox=S.inbox||[];
+  const ids=[...new Set([...S.inbox.map(m=>m.id),...Object.keys(S.chatLog)])];
+  let html='<h3>Messages</h3>';
+  if(!ids.length)html+='<p class="m">No chats yet. Talk to neighbours outside, then message them!</p>';
+  else{
+    ids.forEach(id=>{
+      const n=NP.find(x=>x.id===id);if(!n)return;
+      const unread=S.inbox.filter(m=>m.id===id).length;
+      const last=(S.chatLog[id]||[]).slice(-1)[0];
+      const preview=last?(last.t.length>36?last.t.slice(0,36)+'...':last.t):'Start chatting';
+      html+='<button class="o" onclick="openChat(\''+id+'\')"><b>'+n.name+'</b>'+(unread?' <span style="background:#e11;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px">'+unread+'</span>':'')+'<br><span class="m">'+preview+'</span></button>';
+    });
+  }
+  html+='<button class="o" onclick="phone()">Back</button>';
+  modal(html,true);
+}
+function openChat(id){
+  S.chatLog=S.chatLog||{};S.chatLog[id]=S.chatLog[id]||[];S.inbox=S.inbox||[];
+  S.inbox.filter(m=>m.id===id).forEach(m=>{
+    if(!S.chatLog[id].some(x=>x.from==='them'&&x.t===m.text))S.chatLog[id].push({from:'them',t:m.text});
+  });
+  S.inbox=S.inbox.filter(m=>m.id!==id);
+  const n=NP.find(x=>x.id===id),r=rel(id),log=S.chatLog[id].slice(-10);
+  let html='<h3>'+n.name+'</h3><p class="m">'+FL(Math.round(r.f))+' · '+Math.round(r.f)+'/100</p>';
+  html+='<div style="max-height:240px;overflow-y:auto;margin:8px 0;padding:4px 0">';
+  if(!log.length)html+='<p class="m">No messages yet. Say something!</p>';
+  log.forEach(m=>{
+    const mine=m.from==='me';
+    html+='<div style="display:flex;justify-content:'+(mine?'flex-end':'flex-start')+';margin:5px 0">';
+    html+='<span style="background:'+(mine?'#3a6ea5':'#2a2f42')+';color:#fff;padding:8px 12px;border-radius:14px;max-width:78%;font-size:13px;line-height:1.35">'+m.t+'</span></div>';
+  });
+  html+='</div>';
+  html+='<button class="o" onclick="sendChat(\''+id+'\',0)">How are you?</button>';
+  html+='<button class="o" onclick="sendChat(\''+id+'\',1)">Want to hang out?</button>';
+  html+='<button class="o" onclick="sendChat(\''+id+'\',2)">Tell a joke</button>';
+  html+='<button class="o" onclick="sendChat(\''+id+'\',3)">Any neighbourhood news?</button>';
+  html+='<button class="o" onclick="pMsgs()">Back</button>';
+  modal(html,true);store();
+}
+function sendChat(id,k){
+  const n=NP.find(x=>x.id===id),r=rel(id);
+  S.chatLog=S.chatLog||{};S.chatLog[id]=S.chatLog[id]||[];
+  const you=['Hey, how are you doing?','Want to hang out later?','Want to hear a joke?','Any news on the street?'][k];
+  S.chatLog[id].push({from:'me',t:you});
+  let reply;
+  if(r.f<12){
+    reply=['Uh... do I know you?','Sorry, who is this?','Maybe we should meet outside first.','Not sure I can help with that.'][k];
+  } else if(k===0){
+    reply=pick(["I'm good, thanks for asking!","Pretty busy but hanging in there.","Better now that you texted!","Not bad. How about you?"]);
+  } else if(k===1){
+    reply=r.f>=40?pick(["Yeah, that would be nice!","Sure, come find me outside.","I'd like that. After 7?"]):pick(["Maybe when we know each other a bit better.","Hmm, not sure yet. Let's chat more first."]);
+  } else if(k===2){
+    reply=n.likes==='joke'?pick(["Haha yes! Tell me!","Go on then, make me laugh.","You always have good ones."]):pick(["Haha okay...","That was terrible, tell another!","You should do stand-up someday."]);
+  } else {
+    reply=n.likes==='chat'?pick(["Actually yes — the bus times changed again.","Street is busy today. Lots of people out.","Nothing huge, just the usual."]):pick(["Not really, been quiet.","I haven't heard much.","You usually know more than me!"]);
+  }
+  S.chatLog[id].push({from:'them',t:reply});
+  const gainF=r.f<12?1:(k===1&&r.f>=40?4:3);
+  r.f=Math.min(100,r.f+gainF);
+  gain('social',4);S.t+=2;SFX.chime();store();
+  openChat(id);
+}
+function pMsg(i){const m=(S.inbox||[])[i];if(m)openChat(m.id);else pMsgs()}
+function reply(i,k){const m=(S.inbox||[])[i];if(m)openChat(m.id);else pMsgs()}
 function visitDoor(n){
   const f=rel(n.id).f;
   if(f<40)toast(`You don't know ${n.name} well enough yet. Chat when you see them outside.`);
   else if(nstate(n)!=='home')toast(`${n.name} is home between 19:00 and 22:00, or when it rains.`);
-  else{setScene(true,n.id);P.position.set(0,0,3);toast(`${n.name} welcomes you in`);store()}
+  else{S.vis=n.id;setScene(true,n.id);P.position.set(0,0,2);toast('Visiting '+n.name);store()}
 }
-function leaveVisit(){const n=NP.find(x=>x.id===S.vis),d=n.door;setScene(false);P.position.set(d[0],0,d[1]+(d[1]<3?1.6:-1.6));toast('You head back outside');store()}
-function shared(n,k,g,msg){const r=rel(n.id);if(r.d[k]===day()){toast('You already did that today.');return}r.d[k]=day();r.f=Math.min(100,r.f+g);S.t+=30;if(k==='snack'){gain('hunger',25);gain('social',12)}else{gain('fun',25);gain('social',8)}toast(msg+' Friendship +'+g);store()}
-function A_V(){const n=NP.find(x=>x.id===S.vis);return[
-  {x:0,z:-1.5,r:2.2,label:'Talk to '+n.name,fn:()=>talk(n.id)},
-  {x:-3,z:-2.8,label:'Browse bookshelf',fn:()=>{if(S.readDay===day()){toast('You already read today.');return}S.readDay=day();const b=pick(SUBJ);S.know[b]=Math.min(100,S.know[b]+1);S.t+=20;toast('You read a book. '+b+' +1');store()}},
-  {x:3,z:-1.6,label:'Share a snack',fn:()=>shared(n,'snack',6,'You shared a snack and laughed.')},
-  {x:4,z:.7,label:'Watch TV together',fn:()=>shared(n,'tv',5,'You watched TV together.')},
-  {x:0,z:3.6,label:'Leave',fn:leaveVisit}]}
+function leaveVisit(){const n=NP.find(x=>x.id===S.vis);setScene(false);P.position.set(n?n.door[0]:0,0,n?n.door[1]+(n.door[1]<0?-1:1):0);S.vis=null;toast('Back outside');store()}
+function A_V(){return[{x:0,z:3.2,label:'Leave',fn:leaveVisit},{x:0,z:-1.5,r:2.5,label:'Chat with host',fn:()=>talk(S.vis)}]}
