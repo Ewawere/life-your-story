@@ -63,7 +63,7 @@ box(INN,3,1,1.4,0x8a5a2b,-3,.5,-4);box(INN,.9,.06,.6,0x333,-3,1.05,-4.1);       
 box(INN,2.2,.6,3.6,0x3d6fb6,3,.3,-3.5);box(INN,1.6,.2,.6,0xffffff,3,.7,-4.9);       // bed
 box(INN,1.2,2.4,1.2,0xf4f4f4,4,1.2,2);                                            // fridge
 box(INN,3,.8,1.2,0x9b3d3d,-3.5,.4,1.5);box(INN,.15,1.2,2,0x111827,-4.85,1.8,1.5);box(INN,.8,1,.4,0x7a5230,-3.8,.5,4.2);box(INN,1.6,1,.8,0xd9d9d9,0,.5,-4.4);box(INN,.5,.06,.5,0x333333,0,1.03,-4.4);box(INN,1,2.2,1.1,0xbfe3f2,4.3,1.1,-.1);                                            // sofa
-inRects.push([0,-4.4,1.6,.8],[4.3,-.1,1,1.1],[-3,-4,3,1.4],[3,-3.5,2.2,3.6],[4,2,1.2,1.2],[-3.5,1.5,3,1.2]);
+inRects.push([0,-4.4,1.4,.6],[4.3,-.1,.8,.9],[-3,-4,2.6,1.2],[3,-3.5,1.8,3.0],[4,2,.9,1.0],[-3.5,1.5,2.6,1.0]);
 
 const INN2=new THREE.Group(),hostG=new THREE.Group();sc.add(INN2);INN2.add(hostG);INN2.visible=false;
 box(INN2,10,.1,10,0xc9a46c,0,-.05,0);box(INN2,10,4,.2,0xdcefe8,0,2,-5);box(INN2,.2,4,10,0xdcefe8,-5,2,0);box(INN2,.2,4,10,0xdcefe8,5,2,0);box(INN2,1.8,.04,1.2,0xb5523b,0,.07,4.2);
@@ -73,7 +73,7 @@ const P=new THREE.Group();sc.add(P);let pBody=null;
 function buildPlayer(){while(P.children.length)P.remove(P.children[0]);P.add(person(new THREE.Color(S.color),S.hair,S.skin,{style:S.style||'short'}))}
 function setScene(inside,vis){SFX.door();S.inside=inside;S.vis=vis||null;const hn=S.vis&&NP.find(x=>x.id===S.vis);if(S.vis&&!hn)S.vis=null;OUT.visible=!inside;INN.visible=inside&&!S.vis;INN2.visible=inside&&!!S.vis;if(S.vis)buildHost(hn);
   if(inside)sc.background=new THREE.Color(0xcfe3ee)}
-function enterHome(){setScene(true);P.position.set(0,0,3);toast('Inside your home');store()}
+function enterHome(){setScene(true);P.position.set(0,0,2.2);toast('Inside your home');store()}
 function leaveHome(){setScene(false);P.position.set(0,0,-3.4);toast('Back outside');store()}
 
 // interactables
