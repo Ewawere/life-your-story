@@ -6,8 +6,8 @@ const FIRST=['Amy','Ben','Chloe','David','Emma','Finn','Grace','Harry','Isla','J
 const LAST=['Smith','Jones','Patel','Khan','Brown','Wilson','Taylor','Lee','Martin','Clark','Walker','Hall','Young','King','Wright','Lopez','Hill','Green','Adams','Baker','Carter','Evans','Mitchell','Roberts','Turner','Phillips','Campbell','Parker','Edwards','Collins','Stewart','Morris','Rogers','Reed','Cook','Morgan','Bell','Murphy','Bailey','Rivera','Cooper','Richardson','Cox','Howard','Ward','Torres','Peterson','Gray','Ramirez','James'];
 const PERS=[['Cheerful and outgoing.','joke','comp'],['Hardworking and serious.','day','joke'],['Shy but kind.','comp','chat'],['Loves neighbourhood gossip.','chat','day'],['Sporty and energetic.','day','chat'],['Calm and thoughtful.','chat','joke'],['Playful joker.','joke','comp'],['Quiet book lover.','comp','day'],['Ambitious student.','day','chat'],['Practical and direct.','chat','joke'],['Warm and welcoming.','chat','day'],['Easy-going musician.','comp','chat']];
 const COLS=[0xe76f51,0x2a9d8f,0x8e5cd9,0xf4a261,0x1d7874,0x355070,0xe9c46a,0x9b5de5,0xb56576,0x577590,0xe09f3e,0x3d5a80,0xd62828,0x023e8a,0x2d6a4f,0x9c6644,0x7b2cbf,0xfb8500];
-const SKINS=[0xf1c8a5,0xe8b998,0xa06a45,0x8d5a3b,0xc68642,0xffdbac];
-const HAIRS=[0x111111,0x1d1410,0x4a2c17,0xb5651d,0x2b1d14,0x6b4423];
+const NPC_SKINS=[0xf1c8a5,0xe8b998,0xa06a45,0x8d5a3b,0xc68642,0xffdbac];
+const NPC_HAIRS=[0x111111,0x1d1410,0x4a2c17,0xb5651d,0x2b1d14,0x6b4423];
 const STYLES=['short','long','bun','curly','cap','short'];
 const SLOTS=[];
 const DISTS_OX=[-90,0,90];
@@ -20,7 +20,7 @@ for(let i=0;i<100&&i<SLOTS.length;i++){
   const fn=FIRST[i%FIRST.length], ln=LAST[(i*7)%LAST.length];
   const id='n'+i+'_'+fn.toLowerCase();
   const p=PERS[i%PERS.length];
-  const color=COLS[i%COLS.length], skin=SKINS[i%SKINS.length], hair=HAIRS[i%HAIRS.length];
+  const color=COLS[i%COLS.length], skin=NPC_SKINS[i%NPC_SKINS.length], hair=NPC_HAIRS[i%NPC_HAIRS.length];
   const style=STYLES[i%STYLES.length];
   const o={style};if(style==='cap')o.hat=0x2255aa;if(i%5===2)o.glasses=1;if(i%7===3)o.dress=1;
   const ph=(i*0.37)%(PI*2);
