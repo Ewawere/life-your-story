@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Life: Your Story — First Day 0.9</title>
+<title>Life: Your Story — First Day 0.1</title>
 <style>
 :root{--bg:#0e2230;--pn:#16384c;--ac:#ffb62e;--tx:#f2f6f8;--mu:#9fb7c4;--ok:#5fd08a;--no:#ff7a6b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -37,9 +37,7 @@ input[type=text]{width:100%;padding:12px;border-radius:10px;border:1px solid #ff
 .sw.on{border-color:#fff}
 table{width:100%;border-collapse:collapse;font-size:14px}td{padding:4px 0;vertical-align:top}td:first-child{color:var(--mu);width:42%}
 .big{font-size:44px;font-weight:800;color:var(--ac);line-height:1}
-</style>
-</head>
-<body>
+</style></head><body>
 <canvas id="c"></canvas>
 <div id="bub"></div><div id="rain"></div><div id="hud"><div class="chip"><b id="hn"></b> <span id="hc" class="m"></span><span class="bar"><i id="he"></i></span><span id="nd" class="m" style="display:block;font-size:12px;margin-top:4px"></span></div><span><button id="phoneBtn" onclick="phone()">📱</button> <button id="menuBtn" onclick="menu()">Menu</button></span></div>
 <div id="hint" class="chip" style="position:fixed;left:12px;right:12px;top:calc(64px + env(safe-area-inset-top,0px));display:none;text-align:center;pointer-events:none"></div><div id="look"></div><div id="joy"><div id="knob"></div></div>
@@ -47,18 +45,544 @@ table{width:100%;border-collapse:collapse;font-size:14px}td{padding:4px 0;vertic
 <div id="modal"><div id="mb"></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="01-utils.js"></script>
-<script src="02-audio.js"></script>
-<script src="03-family.js"></script>
-<script src="04-exams.js"></script>
-<script src="05-education.js"></script>
-<script src="06-school.js"></script>
-<script src="07-needs.js"></script>
-<script src="08-life.js"></script>
-<script src="09-economy.js"></script>
-<script src="10-neighbours.js"></script>
-<script src="11-menus.js"></script>
-<script src="12-world.js"></script>
-<script src="13-input.js"></script>
-<script src="14-main.js"></script>
-</body></html>
+<script>
+/* ===== utils ===== */
+const $=id=>document.getElementById(id);
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(0,i);[a[i],a[j]]=[a[j],a[i]]}return a};
+const gbp=n=>{n=Math.round(n*100)/100;return '£'+(n%1?n.toFixed(2):n.toLocaleString('en-US'))};
+let S=null, modalOpen=false;
+function store(){try{if(S)localStorage.setItem('lys01',JSON.stringify(S))}catch(e){}}
+function loadSave(){try{return JSON.parse(localStorage.getItem('lys01'))}catch(e){return null}}
+function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>e.style.display='none',2200)}
+function modal(h,close){$('mb').innerHTML=h+(close?'<button class="o" onclick="closeM()">Close</button>':'');$('modal').style.display='flex';modalOpen=true;$('mb').scrollTop=0}
+function closeM(){$('modal').style.display='none';modalOpen=false}
+
+/* ===== sound (audio.js) — free WebAudio, no files ===== */
+let AC=null,amb=null;
+function audio(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==='suspended')try{AC.resume()}catch(e){}return AC}
+function beep(f,d,t,v){if(!AC||(S&&S.muted))return;try{const o=AC.createOscillator(),g=AC.createGain(),n=AC.currentTime;o.type=t||'sine';o.frequency.value=f;g.gain.value=v||.06;o.connect(g);g.connect(AC.destination);g.gain.setTargetAtTime(0,n+d*.6,d*.15);o.start(n);o.stop(n+d)}catch(e){}}
+const SFX={ok:()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110)},bad:()=>beep(180,.25,'square',.04),tap:()=>beep(520,.06),door:()=>{beep(220,.1,'triangle');setTimeout(()=>beep(330,.12,'triangle'),90)},chime:()=>[523,659,784].forEach((f,i)=>setTimeout(()=>beep(f,.2),i*110))};
+function startAmbient(){if(!AC||amb)return;try{const b=AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate),d=b.getChannelData(0);let l=0;for(let i=0;i<d.length;i++){l=(l+.02*(Math.random()*2-1))/1.02;d[i]=l*3.5}const src=AC.createBufferSource();src.buffer=b;src.loop=true;const g=AC.createGain();g.gain.value=0;src.connect(g);g.connect(AC.destination);src.start();amb=g}catch(e){}}
+addEventListener('pointerdown',()=>{audio();startAmbient()},{once:true});
+
+/* ===== family system (family.js) ===== */
+const FN={m:['James','Oliver','Daniel','Mohammed','Arjun','Lucas','Tomasz'],f:['Emma','Sophie','Aisha','Priya','Chloe','Maria','Hannah']},
+SUR=['Smith','Taylor','Khan','Patel','Jones','Evans','Brown','Walker'],
+JOBS={Low:['shop assistant','bus driver','care worker','security guard','delivery driver'],Middle:['teacher','nurse','civil servant','shop owner','mechanic'],Wealthy:['company director','surgeon','property developer','bank executive']},
+TRAITS=['strict','generous','hardworking','easy-going','ambitious','always worried about money','very encouraging'],
+EXPECT=['wants you to finish school with strong grades','needs you to help at home and with the family shop','wants you to find your own path'],
+HOUSE={Low:'Rented two-room flat',Middle:'Rented three-bedroom flat',Wealthy:'Large family house'};
+const CFG={probs:[['Low',.35],['Middle',.45],['Wealthy',.20]]}; // configurable class odds
+function genFamily(){
+  let r=Math.random(),cls='Wealthy',a=0;for(const [c,p] of CFG.probs){a+=p;if(r<a){cls=c;break}}
+  const two=Math.random()<({Low:.5,Middle:.7,Wealthy:.85}[cls]);
+  const rg={Low:[14,24],Middle:[30,60],Wealthy:[80,200]}[cls];
+  const income=rnd(rg[0],rg[1])*100;
+  const spend={Low:[.78,.95],Middle:[.55,.78],Wealthy:[.35,.55]}[cls];
+  const expenses=Math.round(income*(spend[0]+Math.random()*(spend[1]-spend[0])));
+  const sur=pick(SUR),g=[],jobs=shuf(JOBS[cls]);
+  for(let i=0;i<(two?2:1);i++){const sx=Math.random()<.5?'m':'f';g.push({name:pick(FN[sx])+' '+sur,job:jobs[i],trait:pick(TRAITS)})}
+  const sibs=[];for(let i=rnd(0,3);i>0;i--)sibs.push({name:pick([...FN.m,...FN.f]),age:rnd(6,24)});
+  return{cls,sur,guardians:g,sibs,income,expenses,house:HOUSE[cls],expect:pick(EXPECT),pocket:{Low:20,Middle:50,Wealthy:150}[cls]};
+}
+function famHTML(){const f=S.fam;
+  return `<h3>The ${f.sur} family</h3><table>
+  <tr><td>Background</td><td>${f.cls}-income household</td></tr>
+  <tr><td>Home</td><td>${f.house}</td></tr><tr><td>Address</td><td>${addr(0,-8)}</td></tr>
+  ${f.guardians.map((g,i)=>`<tr><td>Guardian ${i+1}</td><td>${g.name}, ${g.job} (${g.trait})</td></tr>`).join('')}
+  <tr><td>Siblings</td><td>${f.sibs.length?f.sibs.map(s=>s.name+' ('+s.age+')').join(', '):'None'}</td></tr>
+  <tr><td>Monthly income</td><td>${gbp(f.income)}</td></tr>
+  <tr><td>Monthly expenses</td><td>${gbp(f.expenses)}</td></tr>
+  <tr><td>Left over</td><td>${gbp(f.income-f.expenses)}</td></tr>
+  <tr><td>Expectation</td><td>Family ${f.expect}</td></tr></table>`}
+
+/* ===== question bank (exams.js) — original questions ===== */
+const Q=(s,t,d,q,o,a,e)=>({s,t,d,q,o,a,e});
+const QB=[
+Q('Maths','Number',1,'What is 15% of 200?',['20','30','15','25'],1,'15/100 × 200 = 30.'),
+Q('Maths','Algebra',1,'Solve 3x + 4 = 19. What is x?',['3','7','5','15'],2,'Subtract 4: 3x = 15, so x = 5.'),
+Q('Maths','Geometry',1,'A rectangle is 8 m by 5 m. What is its area?',['13 m²','26 m²','40 m²','45 m²'],2,'Area = length × width = 8 × 5 = 40.'),
+Q('Maths','Number',1,'A notebook costs £3.50. What do 4 notebooks cost?',['£12','£14','£15','£16'],1,'3.50 × 4 = 14.'),
+Q('Maths','Geometry',1,'The angles of a triangle add up to…',['90°','270°','180°','360°'],2,'Every triangle has angles totalling 180°.'),
+Q('Maths','Number',2,'Next number: 2, 6, 18, 54, ?',['108','162','72','148'],1,'Each term is multiplied by 3. 54 × 3 = 162.'),
+Q('Maths','Algebra',2,'Simplify 2(x + 3) − x.',['x + 6','3x + 6','x + 3','2x + 3'],0,'2x + 6 − x = x + 6.'),
+Q('Maths','Geometry',2,'A circle has radius 7 cm. Its circumference (π = 22/7) is…',['22 cm','44 cm','154 cm','49 cm'],1,'C = 2πr = 2 × 22/7 × 7 = 44.'),
+Q('Maths','Data',2,'What is the mean of 4, 8, 6, 10 and 7?',['6','7','8','35'],1,'Sum = 35, and 35 ÷ 5 = 7.'),
+Q('Maths','Probability',2,'What is the chance of rolling an even number on a fair die?',['1/6','1/3','1/2','2/3'],2,'Even numbers: 2, 4, 6. That is 3 out of 6 = 1/2.'),
+Q('Maths','Number',3,'After a 20% discount a phone costs £400. What was the original price?',['£480','£500','£520','£320'],1,'£400 is 80% of the original, so original = 400 ÷ 0.8 = 500.'),
+Q('Maths','Algebra',3,'Which values solve x² − 5x + 6 = 0?',['1 and 6','2 and 3','−2 and −3','5 and 6'],1,'Factorise: (x − 2)(x − 3) = 0.'),
+Q('Maths','Geometry',3,'A right triangle has shorter sides 6 cm and 8 cm. Its hypotenuse is…',['10 cm','12 cm','14 cm','7 cm'],0,'6² + 8² = 100, and √100 = 10.'),
+Q('Maths','Probability',3,'Two fair coins are tossed. The probability of two heads is…',['1/2','1/4','1/3','2/3'],1,'1/2 × 1/2 = 1/4.'),
+Q('English','Grammar',1,'Which sentence is correct?',["She don't like rice.","She doesn't like rice.","She not like rice.","She do not likes rice."],1,'With she/he/it we use "doesn\'t" plus the base verb.'),
+Q('English','Vocabulary',1,'Which word means almost the same as "rapid"?',['slow','quick','quiet','heavy'],1,'Rapid means fast, so "quick" is the synonym.'),
+Q('English','Grammar',1,'A word that describes a noun is called a(n)…',['verb','adverb','adjective','pronoun'],2,'Adjectives describe nouns: a "tall" tree.'),
+Q('English','Grammar',1,'What is the plural of "child"?',['childs','childrens','children','childes'],2,'"Child" is irregular: the plural is "children".'),
+Q('English','Vocabulary',1,'What is the opposite of "brave"?',['bold','cowardly','strong','loud'],1,'Cowardly means lacking courage.'),
+Q('English','Grammar',2,'Choose the correct word: Neither of the boys ___ ready.',['are','were','is','be'],2,'"Neither" is singular, so it takes "is".'),
+Q('English','Vocabulary',2,'What is the opposite of "scarce"?',['rare','plentiful','costly','tiny'],1,'Scarce means hard to find. Plentiful means there is a lot.'),
+Q('English','Grammar',2,'Name the tense: "By noon, she had finished her work."',['Simple past','Past perfect','Present perfect','Future perfect'],1,'"Had" plus a past participle, about an earlier past moment, is past perfect.'),
+Q('English','Vocabulary',2,'"Benevolent" most nearly means…',['cruel','kind and generous','careless','nervous'],1,'Benevolent describes someone who wishes others well.'),
+Q('English','Literature',3,'"The market was silent; even the hens seemed to hold their breath." This is…',['simile','personification','alliteration','hyperbole'],1,'The hens are given a human action, which is personification.'),
+Q('English','Grammar',3,'Which sentence has a misplaced modifier?',['Ada missed the bus while running down the road.','Running down the road, the bus was missed by Ada.','Ada, running down the road, missed the bus.','While Ada ran down the road, she missed the bus.'],1,'In option B the opening phrase seems to describe the bus, not Ada.'),
+Q('English','Comprehension',3,'In "Despite the rain, the match went ahead", "Despite" shows…',['cause','contrast','time','addition'],1,'The match continued even though rain would normally stop it. That is contrast.'),
+Q('Science','Biology',1,'Which gas do plants take in for photosynthesis?',['Oxygen','Carbon dioxide','Nitrogen','Hydrogen'],1,'Plants use carbon dioxide, water and light to make food.'),
+Q('Science','Chemistry',1,'At sea level, pure water boils at…',['50 °C','150 °C','100 °C','0 °C'],2,'Water boils at 100 °C at sea level.'),
+Q('Science','Biology',1,'Which organ pumps blood around the body?',['Lung','Liver','Kidney','Heart'],3,'The heart is a muscle that pumps blood.'),
+Q('Science','Physics',1,'Which force pulls objects towards the Earth?',['Friction','Magnetism','Gravity','Tension'],2,"Gravity attracts objects towards Earth's centre."),
+Q('Science','Chemistry',2,'What is the chemical symbol for sodium?',['S','So','Na','N'],2,'Na comes from the Latin name natrium.'),
+Q('Science','Biology',2,'Which part of a cell contains its genetic material?',['Cytoplasm','Nucleus','Cell wall','Vacuole'],1,'The nucleus holds the DNA.'),
+Q('Science','Physics',2,'A car travels 150 km in 2 hours. What is its average speed?',['50 km/h','75 km/h','300 km/h','150 km/h'],1,'Speed = distance ÷ time = 150 ÷ 2 = 75.'),
+Q('Science','Chemistry',2,'What is the pH of a neutral solution such as pure water?',['0','7','14','10'],1,'pH 7 is neutral. Below 7 is acidic and above 7 is alkaline.'),
+Q('Science','Biology',2,'Malaria is spread by which animal?',['Housefly','Female Anopheles mosquito','Tsetse fly','Cockroach'],1,'The parasite is carried by female Anopheles mosquitoes.'),
+Q('Science','Biology',3,'Water moving through a semi-permeable membrane from a dilute to a concentrated solution is called…',['Diffusion','Osmosis','Respiration','Evaporation'],1,'That movement of water is osmosis.'),
+Q('Science','Physics',3,'A 10 N force moves an object 3 m in its own direction. The work done is…',['13 J','30 J','3.3 J','7 J'],1,'Work = force × distance = 10 × 3 = 30 J.'),
+Q('Science','Chemistry',3,'Which balanced equation is correct for making water?',['H₂ + O₂ → H₂O','2H₂ + O₂ → 2H₂O','H₂ + 2O₂ → 2H₂O','2H + O → H₂O'],1,'Four hydrogen atoms and two oxygen atoms appear on both sides in 2H₂ + O₂ → 2H₂O.'),
+Q('Science','Physics',3,"Ohm's law says that voltage V equals…",['I ÷ R','I × R','I + R','R ÷ I'],1,'V = I × R: current times resistance.')];
+const SUBJ=['Maths','English','Science'];
+const grade=p=>p>=83?'A':p>=67?'B':p>=50?'C':p>=33?'D':'F';
+
+// Reusable quiz runner: title, questions, seconds (0 = untimed), show explanations, callback(log)
+function quiz(title,qs,secs,explain,done){
+  let i=0,t=secs,iv=null,log=[],locked=false;
+  const finish=()=>{clearInterval(iv);done(log,qs)};
+  const show=()=>{
+    const q=qs[i],opts=shuf(q.o.map((x,k)=>({x,k})));locked=false;
+    modal(`<h3>${title}</h3><p class="m">Question ${i+1} of ${qs.length} · ${q.s}: ${q.t}${secs?' · <b id="tm">'+t+'s</b> left':''}</p><p style="font-size:18px">${q.q}</p>`+
+      opts.map(o=>`<button class="o" data-k="${o.k}">${o.x}</button>`).join(''));
+    document.querySelectorAll('#mb .o').forEach(b=>b.onclick=()=>answer(+b.dataset.k,b));
+  };
+  const next=()=>{i++;if(i>=qs.length)finish();else show()};
+  const answer=(k,btn)=>{
+    if(locked)return;locked=true;const q=qs[i],ok=k===q.a;(ok?SFX.ok:SFX.bad)();log.push({q:q.q,ok,pick:q.o[k],right:q.o[q.a],e:q.e,s:q.s});
+    if(!explain){next();return}
+    document.querySelectorAll('#mb .o').forEach(b=>{if(+b.dataset.k===q.a)b.classList.add('ok');else if(b===btn)b.classList.add('no')});
+    $('mb').insertAdjacentHTML('beforeend',`<p>${ok?'Correct. ':'Not quite. '}${q.e}</p><button class="o go" id="nx">${i+1<qs.length?'Next question':'Finish'}</button>`);
+    $('nx').onclick=next;
+  };
+  if(secs)iv=setInterval(()=>{t--;const e=$('tm');if(e)e.textContent=t;if(t<=0){while(log.length<qs.length)log.push({q:qs[log.length].q,ok:false,pick:'(no answer)',right:qs[log.length].o[qs[log.length].a],e:qs[log.length].e,s:qs[log.length].s});finish()}},1000);
+  show();
+}
+
+/* ===== education actions (education.js) ===== */
+const lvl=k=>k<35?1:k<70?2:3;
+function pickQs(pool,n,l){const seen=S.seen||(S.seen={});return pool.map(q=>[(seen[q.q]?9:0)+Math.abs(q.d-l)*3+Math.random(),q]).sort((a,b)=>a[0]-b[0]).slice(0,n).map(x=>x[1])}
+function markSeen(log){S.seen=S.seen||{};log.forEach(l=>S.seen[l.q]=1)}
+function deskMenu(){
+  modal(`<h3>Study desk</h3><p class="m">Energy ${Math.round(S.energy)}%. Studying costs energy. Pick a subject, or test yourself.</p>`+
+    SUBJ.map(s=>`<button class="o" onclick="study('${s}')">Study ${s} <span class="m">· knowledge ${S.know[s]}/100</span></button>`).join('')+
+    `<button class="o go" onclick="exam()">Take timed exam (6 questions, 90 s)</button>`,true);
+}
+function study(sub){
+  if(S.energy<15){modal('<h3>Too tired</h3><p>You need to eat or sleep before studying.</p>',true);return}
+  const qs=pickQs(QB.filter(q=>q.s===sub),3,lvl(S.know[sub]));
+  quiz('Study: '+sub,qs,0,true,log=>{
+    const right=log.filter(l=>l.ok).length;markSeen(log);
+    S.know[sub]=Math.min(100,S.know[sub]+Math.round((right*4+(3-right))*mm()));S.energy=Math.max(0,S.energy-12);S.t+=45;store();
+    modal(`<h3>Session finished</h3><p>${right} of 3 correct. ${sub} knowledge is now ${S.know[sub]}/100.</p><p class="m">Right answers teach you more than wrong ones.</p><button class="o go" onclick="study('${sub}')">Study ${sub} again</button><button class="o" onclick="deskMenu()">Back to desk</button><button class="o" onclick="closeM()">Close</button>`);
+  });
+}
+function exam(){
+  if(S.energy<20){modal('<h3>Too tired</h3><p>You need at least 20% energy for an exam.</p>',true);return}
+  const qs=shuf(QB).slice(0,6);
+  quiz('Mock exam',qs,90,false,log=>{
+    const right=log.filter(l=>l.ok).length,pct=Math.round(right/6*100),g=grade(pct);
+    S.exams.unshift({pct,g,right,at:Math.floor(S.t)});S.exams=S.exams.slice(0,10);S.energy=Math.max(0,S.energy-15);S.t+=90;store();
+    modal(`<p class="m">Mock exam result</p><div class="big">${g}</div><p><b>${right}/6</b> correct (${pct}%)</p>`+
+      log.map(l=>`<p><b style="color:${l.ok?'var(--ok)':'var(--no)'}">${l.ok?'Right':'Wrong'}</b> · ${l.q}<br><span class="m">${l.ok?'You answered: '+l.pick:'You answered: '+l.pick+'. Correct: '+l.right+'. '+l.e}</span></p>`).join('')+
+      `<button class="o go" onclick="exam()">Try another exam</button><button class="o" onclick="closeM()">Close</button>`);
+  });
+}
+
+/* ===== school + university (education.js) ===== */
+const TT=['Maths','English','Science','Maths','English'],DN=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const day=()=>Math.floor(S.t/1440),hr=()=>(S.t%1440)/60;
+function schoolMenu(){
+  const d=day()%7,h=hr();let st='';
+  if(d>4)st='School is closed at weekends.';else if(h<8||h>=14)st='School runs 08:00–14:00. Come back during school hours.';else if(S.lastSch===day())st='You already attended today. See you tomorrow.';else if(S.energy<15)st='You are too tired for class. Eat or sleep first.';
+  modal(`<h3>Greenfield Secondary School</h3><p class="m">${addr(28,-8)} · Lessons attended: ${S.att}</p><table>${TT.map((x,i)=>`<tr><td>${DN[i]}</td><td>${x}${i===d?' <b>(today)</b>':''}</td></tr>`).join('')}</table>`+(st?`<p>${st}</p>`:`<button class="o go" onclick="lesson()">Attend today's ${TT[d]} lesson</button>`),true);
+}
+function lesson(){
+  const sub=TT[day()%7],qs=pickQs(QB.filter(q=>q.s===sub),4,lvl(S.know[sub]));
+  quiz('Class: '+sub,qs,0,true,log=>{const r=log.filter(l=>l.ok).length;markSeen(log);
+    S.know[sub]=Math.min(100,S.know[sub]+Math.round((r*3+(4-r))*mm()));S.att++;S.lastSch=day();S.energy=Math.max(0,S.energy-15);S.t+=120;store();
+    modal(`<h3>Lesson finished</h3><p>${r} of 4 correct. ${sub} knowledge: ${S.know[sub]}/100.</p><p class="m">Lessons attended: ${S.att}</p>`,true)});
+}
+const CRS={Medicine:{c:72,f:9000,s:['Science']},Engineering:{c:66,f:7500,s:['Maths','Science']},Law:{c:64,f:6500,s:['English']},Business:{c:58,f:5500,s:['Maths','English']}};
+function uniMenu(){
+  let st='';if(S.att<3)st='To be eligible, attend at least 3 school lessons first ('+S.att+'/3).';else if(S.lastApp===day())st='Admissions has closed for today. Come back tomorrow.';
+  modal(`<h3>Unity University admissions</h3><p class="m">Entrance exam: 8 hard questions in 150 s. Places are competitive and the cut-off changes every year. In-game courses are not real qualifications.</p>`+(st?`<p>${st}</p>`:Object.keys(CRS).map(k=>`<button class="o" onclick="apply('${k}')">${k} <span class="m">· tuition ${gbp(CRS[k].f)}/yr</span></button>`).join('')),true);
+}
+function apply(k){
+  const C=CRS[k];if(S.energy<30){modal('<h3>Too tired</h3><p>You need at least 30% energy for an entrance exam.</p>',true);return}
+  quiz(k+' entrance exam',pickQs(QB.filter(q=>C.s.includes(q.s)),8,3),150,false,log=>{
+    const r=log.filter(l=>l.ok).length,kav=C.s.reduce((a,x)=>a+S.know[x],0)/C.s.length;
+    const score=Math.round(r/8*100*.7+kav*.3),cut=C.c+rnd(-4,6),m=score-cut,low=S.fam.cls==='Low',ok=m>=0;
+    const sch=!ok?'None':m>=(low?8:12)?'Full':m>=(low?3:6)?'Half':'None';
+    const fee=sch==='Full'?0:sch==='Half'?C.f/2:C.f,afford=(S.fam.income-S.fam.expenses)*12;
+    S.apps.unshift({k,score,cut,ok,sch});S.apps=S.apps.slice(0,8);S.lastApp=day();S.energy=Math.max(0,S.energy-20);S.t+=150;markSeen(log);store();
+    modal(`<p class="m">${k} application</p><div class="big">${ok?'Admitted':'Not admitted'}</div><p>Entrance exam: <b>${r}/8</b><br>Your admission score: <b>${score}</b><br>This year's cut-off: <b>${cut}</b></p><p class="m">${rnd(300,900)} applicants competed for ${rnd(40,80)} places.</p>`+
+    (ok?`<p>Scholarship: <b>${sch==='Full'?'Full tuition':sch==='Half'?'50% of tuition':'None'}</b>${low&&sch!=='None'?' (need-based consideration applied)':''}</p><p>Tuition to pay: <b>${gbp(fee)}</b> per year. ${fee>afford?'Your family cannot cover this from monthly savings alone. Look for part-time work or a stronger scholarship.':'Your family can cover this.'}</p><p class="m">University life arrives in a later stage.</p>`:`<p>You missed the cut-off by ${-m} point${-m===1?'':'s'}. Study more and apply again tomorrow.</p>`)+
+    '<button class="o" onclick="uniMenu()">Back to admissions</button><button class="o" onclick="closeM()">Close</button>');});
+}
+
+/* ===== needs, mood and life events (needs.js) ===== */
+const cl=v=>Math.max(0,Math.min(100,v)),gain=(k,v)=>{S.need[k]=cl(S.need[k]+v)};
+const mood=()=>{const N=S.need;return(N.hunger+N.fun+N.social+N.hygiene)/4},ML=m=>m<25?'Miserable':m<45?'Low':m<70?'OK':'Great',mm=()=>{const m=mood();return m<35?.75:m>=70?1.15:1};
+const weakest=()=>SUBJ.slice().sort((a,b)=>S.know[a]-S.know[b])[0];
+const EVS=[
+{t:'Class materials',d:'Your teacher asks for £15 for class materials.',o:[['Pay £15',()=>{if(S.cash<15){gain('social',-5);return 'You cannot afford it, so you ask a parent. It feels awkward.'}S.cash-=15;const b=pick(SUBJ);S.know[b]=Math.min(100,S.know[b]+2);return 'You paid and got the notes. '+b+' +2.'}],['Ask a parent',()=>{gain('social',-5);return 'Your parent helps, but you feel a little awkward.'}]]},
+{t:'Power cut',d:'The light is gone and the room is hot and dark.',o:[['Study by candlelight',()=>{const b=weakest();S.know[b]=Math.min(100,S.know[b]+3);S.energy=Math.max(0,S.energy-10);gain('fun',-5);S.t+=60;return 'You squint at your notes. '+b+' +3, energy -10.'}],['Rest until it passes',()=>{S.energy=Math.min(100,S.energy+15);gain('fun',-10);S.t+=60;return 'You rest in the dark. Energy +15.'}]]},
+{t:'Football tonight',d:'Jack waves from the fence: "We need one more player tonight!"',o:[['Join them',()=>{gain('fun',30);gain('social',15);S.energy=Math.max(0,S.energy-15);S.t+=90;const r=rel('jack');r.f=Math.min(100,r.f+5);return 'Great game! Fun +30, social +15, Jack friendship +5.'}],['Stay in',()=>'You stay home.']]},
+{t:'Family dinner',d:'Your family calls you to eat together.',o:[['Join dinner',()=>{gain('hunger',50);gain('social',15);S.t+=40;return 'A warm meal with your family. Hunger +50, social +15.'}],['Skip it',()=>{gain('social',-5);return 'You skip it. Your family notices.'}]]}];
+let curEv=null;
+function lifeEvent(){curEv=pick(EVS);SFX.chime();modal(`<h3>${curEv.t}</h3><p>${curEv.d}</p>`+curEv.o.map((o,i)=>`<button class="o" onclick="evPick(${i})">${o[0]}</button>`).join(''))}
+function evPick(i){const m=curEv.o[i][1]();S.evT=S.t+rnd(240,480);store();modal(`<h3>${curEv.t}</h3><p>${m}</p>`,true)}
+
+/* ===== weather, age and skills (life.js) ===== */
+let WX=null; // test hook: true/false forces rain, null = natural
+const rainyDay=d=>WX!==null?WX:(Math.imul(d+7,2654435761)>>>0)%100<30;
+const raining=()=>{const h=hr();return h>=13&&h<19&&rainyDay(day())};
+const YEAR=14,age=()=>16+Math.floor(day()/YEAR); // one year = 14 game days
+function birthday(){
+  const gift={Low:20,Middle:50,Wealthy:150}[S.fam.cls],fr=NP.filter(n=>rel(n.id).f>=40);
+  S.cash+=gift;fr.forEach(n=>{const r=rel(n.id);r.f=Math.min(100,r.f+3)});gain('fun',25);gain('social',15);SFX.chime();store();
+  modal(`<h3>Happy birthday, ${S.name}!</h3><p>You are now <b>${S.age}</b>.</p><p>Your family bakes a cake and gives you <b>${gbp(gift)}</b>. Fun +25, social +15.</p>`+(fr.length?`<p>${fr.map(n=>n.name).join(', ')} remembered and sent wishes. Friendship +3.</p>`:'<p class="m">No neighbour knows you well enough yet to remember.</p>'),true);
+}
+const nstat=n=>({sleep:'asleep',away:'at school or work until 14:00',home:'at home',out:'out walking in '+areaOf(n.cx).n})[nstate(n)];
+function phone(){modal(`<h3>📱 Phone</h3><p class="m">Balance ${gbp(S.cash)} · ${areaOf(P.position.x).n}</p><button class="o" onclick="pMsgs()">Messages${(S.inbox||[]).length?' ('+S.inbox.length+')':''}</button><button class="o" onclick="pContacts()">Contacts</button><button class="o" onclick="pMap()">Maps</button><button class="o" onclick="pFood()">Food delivery</button>`,true)}
+function pContacts(){modal('<h3>Contacts</h3>'+NP.slice().sort((a,b)=>rel(b.id).f-rel(a.id).f).map(n=>`<button class="o" onclick="pContact('${n.id}')">${n.name} <span class="m">· ${FL(Math.round(rel(n.id).f))} · ${areaOf(n.cx).n}</span></button>`).join('')+'<button class="o" onclick="phone()">Back</button>',true)}
+function pContact(id,msg){const n=NP.find(x=>x.id===id),f=Math.round(rel(id).f);modal(`<h3>${n.name}</h3><p class="m">${addr(n.door[0],n.door[1])}<br>${FL(f)} · ${f}/100</p>${msg?`<p><b>${n.name}:</b> ${msg}</p>`:''}<button class="o" onclick="pText('${id}',0)">Text: What are you up to?</button><button class="o" onclick="pText('${id}',1)">Text: Can I come over?</button><button class="o" onclick="pContacts()">Back</button>`,true)}
+function pText(id,k){const n=NP.find(x=>x.id===id),f=rel(id).f;S.t+=2;pContact(id,k===0?`Right now I'm ${nstat(n)}.`:f<40?"We don't know each other well enough yet. Maybe soon!":nstate(n)==='home'?`Sure, come round! I'm at ${addr(n.door[0],n.door[1])}.`:`Not now, I'm ${nstat(n)}. Try after 19:00.`)}
+function pMap(){const here=areaOf(P.position.x).n;modal('<h3>Maps</h3>'+DIST.map(d=>`<p><b>${d.n}</b> (${d.code})${d.n===here?' · you are here':''}<br><span class="m">${NP.filter(n=>areaOf(n.cx)===d).length} neighbours · ${d.st.join(' and ')}${d.ox===0?'<br>Your home: '+addr(0,-8)+'<br>School: '+addr(28,-8)+'<br>University: '+addr(-28,15)+'<br>Shop: '+addr(0,15):''}</span></p>`).join('')+'<p class="m">Every neighbourhood has a bus stop. Fare £2.</p><button class="o" onclick="phone()">Back</button>',true)}
+const MEALS=[['Burger meal',9,50,5],['Pizza',12,60,10],['Salad bowl',8,40,0]];
+function pFood(){modal(`<h3>Food delivery</h3><p class="m">Arrives in about 30 minutes. Balance ${gbp(S.cash)}</p>`+MEALS.map((m,i)=>`<button class="o" onclick="order(${i})">${m[0]} <span class="m">· ${gbp(m[1])}</span></button>`).join('')+'<button class="o" onclick="phone()">Back</button>',true)}
+function order(i){const m=MEALS[i];if(S.cash<m[1]){toast('Not enough cash');SFX.bad();return}S.cash-=m[1];gain('hunger',m[2]);gain('fun',m[3]);S.t+=30;SFX.ok();store();toast(m[0]+' delivered. Hunger +'+m[2]);pFood()}
+function busMenu(){modal(`<h3>Bus stop</h3><p class="m">You are in ${areaOf(P.position.x).n}. Single fare ${gbp(2)}, about 20 minutes.</p>`+DIST.map((d,i)=>d.n===areaOf(P.position.x).n?'':`<button class="o" onclick="ride(${i})">Take the bus to ${d.n}</button>`).join(''),true)}
+function ride(i){if(S.cash<2){toast('You need £2 for the fare');SFX.bad();return}S.cash-=2;S.t+=20;const d=DIST[i];P.position.set(d.ox+6,0,-.6);S.area=d.n;closeM();toast('Arrived in '+d.n);SFX.door();store()}
+function cook(){
+  if(S.cash<2){toast('You need £2 for ingredients');SFX.bad();return}
+  S.cash-=2;const c=S.sk.cook,h=30+Math.round(c*.4);gain('hunger',h);gain('fun',5);S.sk.cook=Math.min(100,c+4*(1-c/120));S.t+=30;SFX.ok();toast('You cooked. Hunger +'+h+' · Cooking skill '+Math.round(S.sk.cook));store();
+}
+function workout(){
+  if(S.energy<20){toast('Too tired to exercise');SFX.bad();return}
+  const f=S.sk.fit;S.sk.fit=Math.min(100,f+3*(1-f/120));S.energy-=12;gain('hygiene',-10);gain('fun',10);S.t+=40;SFX.ok();toast('Good workout! Fitness '+Math.round(S.sk.fit));store();
+}
+
+/* ===== shop, home decoration and wardrobe (economy.js) ===== */
+const ITEMS=[['Hot meal',6,()=>{gain('hunger',45);S.t+=15}],['Snack',1.5,()=>{gain('hunger',15);gain('fun',10);S.t+=5}],['Cold drink',2,()=>{gain('fun',15);gain('hunger',5)}]],SHIRT=15;
+function shopMenu(){
+  const h=hr();if(h<7||h>=21){modal("<h3>Singh's Corner Shop</h3><p>Open every day 07:00–21:00.</p>",true);return}
+  modal(`<h3>Singh's Corner Shop</h3><p class="m">${addr(0,15)} · Your cash: ${gbp(S.cash)}</p>`+ITEMS.map((it,i)=>`<button class="o" onclick="buy(${i})">${it[0]} <span class="m">· ${gbp(it[1])}</span></button>`).join('')+
+   `<p class="m">Shirts: ${gbp(SHIRT)} each</p>`+COLORS.map(c=>`<button class="o" style="border-left:16px solid ${c}" onclick="shirt('${c}')">${S.shirts.includes(c)?(S.color===c?'Wearing now':'Wear this'):'Buy shirt'}</button>`).join(''),true);
+}
+function buy(i){const it=ITEMS[i];if(S.cash<it[1]){toast('Not enough cash');SFX.bad();return}S.cash-=it[1];it[2]();SFX.ok();store();toast(it[0]+' bought');shopMenu()}
+function shirt(c){if(!S.shirts.includes(c)){if(S.cash<SHIRT){toast('Not enough cash');SFX.bad();return}S.cash-=SHIRT;S.shirts.push(c)}S.color=c;buildPlayer();SFX.ok();store();shopMenu()}
+const DECO={plant:['Potted plant',12,1],rug:['Rug',30,1],lamp:['Floor lamp',20,1],poster:['Wall poster',8,1],armchair:['Armchair',45,2],bookshelf:['Bookshelf',35,1],fishtank:['Fish tank',40,2],wallart:['Framed art',14,1],speaker:['Speaker',25,1],mirror:['Mirror',16,1]};
+const WALLS=['#f3ead7','#cfe3c8','#cfe3f2','#f4d6d6','#b9c6d6'],FLOORS=['#d8b98a','#7a5a3a','#b8bcc2'];
+const comfort=()=>Math.min(6,(S.deco||[]).reduce((a,k)=>a+(DECO[k]?DECO[k][2]:1),0));
+function decoMenu(){const sp=(k,L)=>`<div>${L.map(c=>`<span class="sw${S.paint[k]===c?' on':''}" style="background:${c}" onclick="paint('${k}','${c}')"></span>`).join('')}</div>`;
+  modal(`<h3>Decorate your home</h3><p class="m">Cash ${gbp(S.cash)} · Comfort ${comfort()}/6. Comfort slows how fast fun drops. Selling refunds half.</p>`+Object.keys(DECO).map(k=>{const o=S.deco.includes(k);return `<button class="o" onclick="${o?'sellDeco':'buyDeco'}('${k}')">${DECO[k][0]} <span class="m">· ${o?'owned · Sell for '+gbp(DECO[k][1]/2):gbp(DECO[k][1])}</span></button>`}).join('')+`<p class="m">Wall colour (${gbp(15)})</p>${sp('wall',WALLS)}<p class="m">Floor (${gbp(15)})</p>${sp('floor',FLOORS)}`,true)}
+function buyDeco(k){if(S.cash<DECO[k][1]){toast('Not enough cash');SFX.bad();return}S.cash-=DECO[k][1];S.deco.push(k);renderDeco();SFX.ok();store();decoMenu()}
+function sellDeco(k){S.deco=S.deco.filter(x=>x!==k);S.cash+=DECO[k][1]/2;renderDeco();SFX.tap();store();decoMenu()}
+function paint(k,c){if(S.paint[k]===c)return;if(S.cash<15){toast('Not enough cash');SFX.bad();return}S.cash-=15;S.paint[k]=c;renderDeco();SFX.ok();store();decoMenu()}
+let decoG=null;
+function renderDeco(){if(decoG)INN.remove(decoG);decoG=new THREE.Group();INN.add(decoG);const D=S.deco||[],L=c=>new THREE.MeshLambertMaterial({color:c});
+  if(S.paint){HFL.material.color.set(S.paint.floor);HW.forEach(w=>w.material.color.set(S.paint.wall))}
+  if(D.includes('rug'))box(decoG,4,.04,3,0x4a6fa5,0,.07,.4);
+  if(D.includes('plant')){cyl(decoG,.3,.25,.5,0x9c5a2a,-4.4,.25,-1.5);const l=new THREE.Mesh(new THREE.SphereGeometry(.5,8,6),L(0x2f8f3e));l.position.set(-4.4,.9,-1.5);decoG.add(l)}
+  if(D.includes('lamp')){cyl(decoG,.05,.05,1.8,0x333333,4.4,.9,3.2);const sh=new THREE.Mesh(new THREE.CylinderGeometry(.35,.4,.3,8),L(0xfff3c4));sh.position.set(4.4,1.9,3.2);decoG.add(sh)}
+  if(D.includes('poster'))box(decoG,1.6,1.2,.05,0x1d7874,-4.7,2.2,-2.5);
+  if(D.includes('armchair')){box(decoG,1.2,.5,1.2,0x8b4513,3.5,.3,2.5);box(decoG,1.2,.8,.3,0x8b4513,3.5,.9,3.1)}
+  if(D.includes('bookshelf')){box(decoG,1.4,2.2,.4,0x5c3a21,-4.5,1.1,1.5);box(decoG,1.2,.05,.35,0x8b5a2b,-4.5,.6,1.5);box(decoG,1.2,.05,.35,0x8b5a2b,-4.5,1.2,1.5);box(decoG,1.2,.05,.35,0x8b5a2b,-4.5,1.8,1.5)}
+  if(D.includes('fishtank')){box(decoG,1.2,.8,.5,0x88ccee,4.2,.5,-1.5);box(decoG,1.1,.05,.4,0x2266aa,4.2,.15,-1.5)}
+  if(D.includes('wallart'))box(decoG,1.4,1,.05,0xc9a46c,4.7,2.2,-3);
+  if(D.includes('speaker')){box(decoG,.4,.6,.3,0x222222,-4.5,.4,3.5);box(decoG,.3,.3,.2,0x444444,-4.5,.9,3.5)}
+  if(D.includes('mirror'))box(decoG,.8,1.2,.05,0xaaccff,4.7,2.2,1.5);
+}
+
+/* ===== neighbours (neighbours.js) ===== */
+const PI=Math.PI;
+function mkN(id,name,pers,likes,dis,cx,lane,doorZ,color,hair,skin,ph,o){return{id,name,pers,likes,dis,cx,lane,door:[cx,doorZ],color,hair,skin,ph,o,g:null,k:0,appr:0}}
+const NP=[
+mkN('emily','Emily','Warm and friendly. Always happy to chat.','chat','joke',0,-14,-8,0xff6b9a,0xb5651d,0xf1c8a5,0,{style:'long'}),
+mkN('oliver','Oliver','Quiet and thoughtful. Prefers deep conversation.','comp','chat',0,14,-8,0x3a86ff,0x1d1410,0xc68642,.5,{style:'short',glasses:1}),
+mkN('priya','Priya','Shy and thoughtful. Kind words make her smile.','comp','chat',0,-14,15,0x8e5cd9,0x1d1410,0xa06a45,.5,{style:'bun',dress:1}),
+mkN('jack','Jack','Chatty and curious. Always knows the street news.','chat','day',0,14,15,0xf4a261,0xb5651d,0xf1c8a5,.5+PI,{style:'cap',hat:0x2255aa}),
+mkN('sophie','Sophie','Sporty and energetic. Loves hearing about your day.','day','chat',-90,-14,-8,0x1d7874,0x4a2c17,0xf1c8a5,1,{style:'bun'}),
+mkN('mohammed','Mohammed','Calm and generous. Enjoys a friendly chat.','chat','joke',-90,14,-8,0x355070,0x1d1410,0xa06a45,1+PI,{style:'short',glasses:1}),
+mkN('lucas','Lucas','Funny and outgoing. Always joking around.','joke','day',-90,-14,15,0xe56b6f,0x1a1a1a,0xc68642,1.5,{style:'curly'}),
+mkN('hannah','Hannah','Bookish and quiet. Appreciates a kind word.','comp','joke',-90,14,15,0x6d597a,0xb5651d,0xf1c8a5,1.5+PI,{style:'long',glasses:1,dress:1}),
+mkN('mei','Mei','Ambitious student. Likes to hear how your day went.','day','chat',90,-14,-8,0xb56576,0x111111,0xe8b998,2,{style:'long'}),
+mkN('tomasz','Tomasz','Practical and dry-humoured. Loves a good joke.','joke','comp',90,14,-8,0x588157,0xb5651d,0xf1c8a5,2+PI,{style:'short'}),
+mkN('fatima','Fatima','Warm and welcoming. Loves neighbourhood news.','chat','day',90,-14,15,0xe09f3e,0x2b1d14,0xa06a45,2.5,{style:'bun',dress:1}),
+mkN('daniel','Daniel','Easy-going musician. Appreciates a compliment.','comp','chat',90,14,15,0x3d5a80,0x4a2c17,0xf1c8a5,2.5+PI,{style:'curly',glasses:1})];
+function nstate(n){const h=hr(),wd=day()%7;if(h<7||h>=22)return'sleep';if(h>=19)return'home';if(wd<5&&h>=8&&h<14)return'away';return raining()?'home':'out'}
+const TOP={greet:['Say hello',3,'Hello! Good to see you.'],chat:['Chat about the neighbourhood',4,'You talk about the street and the weather.'],day:['Ask about their day',5,'You ask how the day has gone.'],joke:['Tell a joke',5,'You tell a joke from school.'],comp:['Give a compliment',4,'You say something kind about their style.']};
+const FL=f=>f<20?'Stranger':f<40?'Acquaintance':f<70?'Friend':'Close friend';
+function rel(id){S.rel=S.rel||{};return S.rel[id]||(S.rel[id]={f:0,d:{}})}
+const hx=c=>'#'+(+c).toString(16).padStart(6,'0');
+TOP.gift=['Give a small gift (£3)',5];TOP.advice=['Ask for advice',2];
+const YOU={greet:'Hello! How are you?',chat:'Have you noticed how busy the street is lately?',day:'How has your day been so far?',joke:'Want to hear a joke?',comp:'I really like your style, you know.',gift:'I got you a little something.',advice:'Can I ask your advice about something?'};
+const LINES={greet:['Hello again, {p}!','Lovely to see you.','Oh hey, {p}. How are things?'],chat:['Honestly, the street has been so busy lately.','Did you see the new bus times? Nobody told us.','I love how friendly this neighbourhood is.'],day:["Not bad, {p}. Plenty to do, but I can't complain.",'Long one, honestly. Thanks for asking though.','Pretty good! Better now that you asked.'],joke:['Ha! That one was good.','*laughs* Oh no, that is terrible. Tell me another.','You should do stand-up, {p}.'],comp:["Aw, thank you. That is really kind.",'You think so? That made my day.',"Stop it, you'll make me blush!"],gift:['Oh, you did not have to! Thank you so much.','That is so thoughtful, {p}.']};
+const INTRO=[['Oh, hello.','Hi... do I know you?'],['Hey!','Oh, hi {p}!'],['{p}! Great to see you!','Hey you!']];
+const LIKE=['They light up at this.','Clearly their favourite kind of chat.'],DIS=['They seem uncomfortable with that.','That made them uncomfortable.'];
+const ADV={Maths:'Practise a little each day, even ten minutes helps.',English:'Read a bit every evening. It really helps.',Science:'Ask why things work. That is how it sticks.'};
+function talk(id,msg,you){
+  const n=NP.find(x=>x.id===id),r=rel(id),f=Math.round(r.f),face=r.m==='like'?'😄':r.m==='dis'?'😕':f>=70?'😊':'🙂';
+  modal(`<div style="display:flex;gap:12px;align-items:center"><div style="flex:none;width:60px;height:60px;border-radius:50%;background:${hx(n.skin)};border:5px solid ${hx(n.color)};display:flex;align-items:center;justify-content:center;font-size:28px">${face}</div><div><h3 style="margin:0">${n.name}</h3><div class="m">${n.pers}<br>${addr(n.door[0],n.door[1])}</div></div></div><p>${FL(f)} · ${f}/100</p><span class="bar" style="width:100%"><i style="width:${f}%"></i></span>${you?`<div class="you">You: "${you}"</div>`:''}<div class="sp">${msg||n.name+' smiles at you.'}</div>`+
+    Object.keys(TOP).map(k=>{const dn=r.d[k]===day();return `<button class="o" ${dn?'disabled style="opacity:.5"':''} onclick="topic('${id}','${k}')">${TOP[k][0]}${dn?' (done today)':''}</button>`}).join('')+
+    (f>=40?`<p class="m">${n.name}: "Come over any evening between 19:00 and 22:00."</p>`:`<p class="m">Friendship grows slowly. Reach 40 to be invited over.</p>`),true);
+}
+function topic(id,k){
+  const n=NP.find(x=>x.id===id),r=rel(id),T=TOP[k],p=S.name;if(r.d[k]===day()){talk(id);return}
+  if(k==='gift'&&S.cash<3){toast('Not enough cash');SFX.bad();return}
+  if(k==='advice'&&r.f<20){talk(id,`${n.name}: "We don't know each other well enough for that yet."`,YOU[k]);return}
+  const tier=r.f<20?0:r.f<40?1:2;let g=T[1]*(1-r.f/150)*mm(),res;
+  if(k==='gift'){S.cash-=3;g+=2}
+  if(k==='advice'){const b=weakest();S.know[b]=Math.min(100,S.know[b]+1);res=`${pick(INTRO[tier])} ${ADV[b]} (${b} +1)`;r.m=''}
+  else if(n.likes===k){g+=2;res=`${pick(INTRO[tier])} ${pick(LINES[k])} ${pick(LIKE)}`;r.m='like'}
+  else if(n.dis===k){g=-1;res=`... ${pick(DIS)}`;r.m='dis'}
+  else{res=`${pick(INTRO[tier])} ${pick(LINES[k])}`;r.m=''}
+  res=res.replace(/\{p\}/g,p);
+  r.f=Math.max(0,Math.min(100,r.f+g));r.d[k]=day();gain('social',8);S.t+=10;S.energy=Math.max(0,S.energy-1);store();
+  talk(id,`${res} (${g>=0?'+':''}${g.toFixed(1)})`,YOU[k]);
+}
+/* speech bubbles, neighbour-to-neighbour chat, gossip, texts */
+const BUB=[];let camT={x:0,y:1.4,z:0},mvSp=0;
+function say(who,text,ms){const i=BUB.findIndex(b=>b.who===who);if(i>=0){if(BUB[i].el)BUB[i].el.remove();BUB.splice(i,1)}BUB.push({who,text:text.replace(/\{p\}/g,S.name),until:performance.now()+(ms||3800),el:null})}
+function toScreen(x,y,z){const c=cam.position,t=camT,fx=t.x-c.x,fy=t.y-c.y,fz=t.z-c.z,fl=Math.hypot(fx,fy,fz),f=[fx/fl,fy/fl,fz/fl],rl=Math.hypot(f[2],f[0]),r=[-f[2]/rl,0,f[0]/rl],u=[-r[2]*f[1],r[2]*f[0]-r[0]*f[2],r[0]*f[1]],d=[x-c.x,y-c.y,z-c.z],X=d[0]*r[0]+d[2]*r[2],Y=d[0]*u[0]+d[1]*u[1]+d[2]*u[2],Z=d[0]*f[0]+d[1]*f[1]+d[2]*f[2];if(Z<.5)return null;const th=Math.tan(PI/6),nx=X/(Z*th*cam.aspect),ny=Y/(Z*th);return[(nx*.5+.5)*innerWidth,(.5-ny*.5)*innerHeight,Math.abs(nx)<1.15&&Math.abs(ny)<1.15]}
+function updateBubbles(now){const box=$('bub');for(let i=BUB.length-1;i>=0;i--){const b=BUB[i];if(now>b.until){if(b.el)b.el.remove();BUB.splice(i,1);continue}
+  const w=b.who,pos=w==='me'?P.position:w.g.position,vis=w==='me'||(w.g.visible&&!S.inside);
+  if(!b.el){b.el=document.createElement('div');b.el.className='b';b.el.textContent=b.text;box.appendChild(b.el)}
+  const sp=vis&&!modalOpen?toScreen(pos.x,pos.y+2.6,pos.z):null;if(sp&&sp[2]){b.el.style.display='block';b.el.style.left=sp[0]+'px';b.el.style.top=sp[1]+'px'}else b.el.style.display='none'}}
+const GREET=[['Hello there!','Morning!','Hi!'],['Hey {p}!','Oh hi {p}, got a minute?'],['{p}! Come say hi!','Hey {p}! Over here!']];
+const NCH={joke:'Did you hear the one about the bus driver?',chat:'Any news on the street today?',day:'How has your day been so far?',comp:'Love your jacket today!'},NRE=['Ha, brilliant!','Oh really? Tell me more.',"Can't complain!",'You always know what to say.'];
+const PAIRS=[['emily','oliver'],['priya','jack'],['sophie','mohammed'],['lucas','hannah'],['mei','tomasz'],['fatima','daniel']];
+function chatter(){PAIRS.forEach(([a,b])=>{const A=NP.find(x=>x.id===a),B=NP.find(x=>x.id===b);if(!A.g.visible||!B.g.visible)return;if(Math.hypot(A.g.position.x-B.g.position.x,A.g.position.z-B.g.position.z)>3.6)return;
+  S.chat=S.chat||{};const k=a+b;if(S.t-(S.chat[k]==null?-999:S.chat[k])<180)return;S.chat[k]=S.t;
+  say(A,NCH[A.likes]);setTimeout(()=>say(B,pick(NRE)),1800);
+  if(rel(a).f>=50&&rel(b).f<30){rel(b).f=Math.min(30,rel(b).f+1);setTimeout(()=>say(A,'{p} is really nice. You should say hi!'),3600);store()}})}
+const TXT={joke:['Heard a great joke today. Ask me about it!','Remind me to tell you a joke next time!'],chat:['Fancy a chat on the street later?','So much news on the street today!'],day:['How is your day going?','Hope your day is going well!'],comp:['Thinking of you. Hope you are doing well!','Just wanted to say you are a lovely neighbour.']};
+function texting(){const fr=NP.filter(n=>rel(n.id).f>=25);if(!fr.length)return;const n=pick(fr);S.inbox=(S.inbox||[]).concat([{id:n.id,text:pick(TXT[n.likes]),t:S.t}]).slice(-6);toast('📱 New message from '+n.name);SFX.chime();store()}
+function pMsgs(){const L=S.inbox||[];modal('<h3>Messages</h3>'+(L.length?L.map((m,i)=>`<button class="o" onclick="pMsg(${i})"><b>${NP.find(n=>n.id===m.id).name}</b><br><span class="m">${m.text}</span></button>`).join(''):'<p class="m">No new messages.</p>')+'<button class="o" onclick="phone()">Back</button>',true)}
+function pMsg(i){const m=S.inbox[i],n=NP.find(x=>x.id===m.id);modal(`<h3>${n.name}</h3><div class="sp">${m.text}</div><button class="o" onclick="reply(${i},1)">Sounds great!</button><button class="o" onclick="reply(${i},0)">Sorry, I'm busy right now</button>`,true)}
+function reply(i,k){const m=S.inbox[i],r=rel(m.id);S.inbox.splice(i,1);if(k){r.f=Math.min(100,r.f+2);gain('social',5);toast('Reply sent. Friendship +2')}else toast('Reply sent.');S.t+=2;store();pMsgs()}
+function visitDoor(n){
+  const f=rel(n.id).f;
+  if(f<40)toast(`You don't know ${n.name} well enough yet. Chat when you see them outside.`);
+  else if(nstate(n)!=='home')toast(`${n.name} is home between 19:00 and 22:00, or when it rains.`);
+  else{setScene(true,n.id);P.position.set(0,0,3);toast(`${n.name} welcomes you in`);store()}
+}
+function leaveVisit(){const n=NP.find(x=>x.id===S.vis),d=n.door;setScene(false);P.position.set(d[0],0,d[1]+(d[1]<3?1.6:-1.6));toast('You head back outside');store()}
+function shared(n,k,g,msg){const r=rel(n.id);if(r.d[k]===day()){toast('You already did that today.');return}r.d[k]=day();r.f=Math.min(100,r.f+g);S.t+=30;if(k==='snack'){gain('hunger',25);gain('social',12)}else{gain('fun',25);gain('social',8)}toast(msg+' Friendship +'+g);store()}
+function A_V(){const n=NP.find(x=>x.id===S.vis);return[
+  {x:0,z:-1.5,r:2.2,label:'Talk to '+n.name,fn:()=>talk(n.id)},
+  {x:-3,z:-2.8,label:'Browse bookshelf',fn:()=>{if(S.readDay===day()){toast('You already read today.');return}S.readDay=day();const b=pick(SUBJ);S.know[b]=Math.min(100,S.know[b]+1);S.t+=20;toast('You read a book. '+b+' +1');store()}},
+  {x:3,z:-1.6,label:'Share a snack',fn:()=>shared(n,'snack',6,'You shared a snack and laughed.')},
+  {x:4,z:.7,label:'Watch TV together',fn:()=>shared(n,'tv',5,'You watched TV together.')},
+  {x:0,z:3.6,label:'Leave',fn:leaveVisit}]}
+
+/* ===== menu / screens (menus.js) ===== */
+function progHTML(){
+  return `<h3>${S.name}, age ${S.age||16}</h3><table>
+  <tr><td>Energy</td><td>${Math.round(S.energy)}%</td></tr>
+  <tr><td>Pocket money</td><td>${gbp(S.cash)}</td></tr>
+  ${SUBJ.map(s=>`<tr><td>${s}</td><td>knowledge ${S.know[s]}/100</td></tr>`).join('')}
+  <tr><td>Mood</td><td>${ML(mood())} (${Math.round(mood())})<br>Hunger ${Math.round(S.need.hunger)} · Fun ${Math.round(S.need.fun)}<br>Social ${Math.round(S.need.social)} · Hygiene ${Math.round(S.need.hygiene)}</td></tr><tr><td>Skills</td><td>Cooking ${Math.round((S.sk||{}).cook||0)} · Fitness ${Math.round((S.sk||{}).fit||0)}</td></tr><tr><td>Home comfort</td><td>${comfort()}/6 comfort · ${(S.deco||[]).length} items</td></tr><tr><td>Neighbours</td><td>${NP.map(n=>n.name+': '+FL(Math.round(rel(n.id).f))).join('<br>')}</td></tr><tr><td>School lessons</td><td>${S.att||0}</td></tr><tr><td>Applications</td><td>${(S.apps||[]).length?S.apps.map(a=>a.k+': '+(a.ok?'admitted'+(a.sch!=='None'?' ('+a.sch+' scholarship)':''):'not admitted')).join('<br>'):'None yet'}</td></tr>
+  <tr><td>Exam history</td><td>${S.exams.length?S.exams.map(e=>e.g+' ('+e.pct+'%)').join(', '):'No exams taken yet'}</td></tr></table>`}
+function menu(){
+  modal(`<h3>Menu</h3><button class="o" onclick="modal(progHTML(),true)">My progress</button><button class="o" onclick="modal(famHTML(),true)">My family</button><button class="o" onclick="store();toast('Game saved');closeM()">Save now</button><button class="o" onclick="if(confirm('Start a new life? Your current save will be replaced.'))newLifeScreen()">New life</button><button class="o" onclick="S.muted=!S.muted;store();menu()">Sound: ${S.muted?'Off':'On'}</button><button class="o" onclick="S.t+=60;store();toast('An hour passes');closeM()">Wait 1 hour</button><button class="o" onclick="closeM()">Resume</button>`);
+}
+const COLORS=['#e4572e','#2e86ab','#7cb518','#f2b705','#8e5cd9'];
+const SKINS=['#8d5a3b','#c68642','#f1c8a5','#5a3825'],HAIRS=['#1d1410','#4a2c17','#b5651d','#8a8a8a'];
+let pickedColor=COLORS[0],pickedSkin=SKINS[0],pickedHair=HAIRS[0],pickedStyle='short';const STY=[['short','✂️'],['long','👩'],['curly','🌀'],['bun','🎀']];
+const mark=el=>{[...el.parentNode.children].forEach(e=>e.classList.remove('on'));el.classList.add('on')};
+const sw=(list,v)=>`<div>${list.map((c,i)=>`<span class="sw${i?'':' on'}" style="background:${c}" onclick="${v}='${c}';mark(this)"></span>`).join('')}</div>`;
+function newLifeScreen(){
+  $('hud').style.display=$('joy').style.display=$('look').style.display=$('act').style.display=$('hint').style.display='none';
+  const sv=loadSave();
+  modal(`<h2>Life: Your Story</h2><p class="m">Prototype 0.9 · Talking & Characters</p>
+  ${sv?`<button class="o go" onclick="continueGame()">Continue as ${sv.name}</button><p class="m">Or start over:</p>`:''}
+  <p>Your name</p><input type="text" id="nm" maxlength="14" placeholder="Enter a name" autocomplete="off">
+  <p>Shirt colour</p>${sw(COLORS,'pickedColor')}<p>Skin tone</p>${sw(SKINS,'pickedSkin')}<p>Hair colour</p>${sw(HAIRS,'pickedHair')}<p>Hair style</p><div>${STY.map((x,i)=>`<span class="sw${i?'':' on'}" style="background:#2b4a63;display:inline-flex;align-items:center;justify-content:center;font-size:20px" onclick="pickedStyle='${x[0]}';mark(this)">${x[1]}</span>`).join('')}</div>
+  <button class="o ${sv?'':'go'}" onclick="startLife()">Begin a new life</button>`);
+}
+function startLife(){
+  const nm=($('nm').value||'').trim()||'Alex';
+  S={name:nm,color:pickedColor,skin:pickedSkin,hair:pickedHair,style:pickedStyle,inbox:[],chat:{},shirts:[pickedColor],deco:[],paint:{wall:'#f3ead7',floor:'#d8b98a'},al:0,sk:{cook:0,fit:0},age:16,fam:genFamily(),know:{Maths:0,English:0,Science:0},energy:90,exams:[],rel:{},vis:null,need:{hunger:80,fun:70,social:60,hygiene:80},nt:480,evT:780,muted:false,seen:{},att:0,lastSch:-1,apps:[],lastApp:-1,t:480,inside:false,x:0,z:5};
+  S.cash=S.fam.pocket;store();
+  modal(`<p class="m">Your new life</p>${famHTML()}<p>You are ${nm}, 16 years old, starting your first day.</p><button class="o go" onclick="beginPlay()">Step outside</button>`);
+}
+function continueGame(){S=loadSave();S.seen=S.seen||{};S.rel=S.rel||{};S.vis=S.vis||null;{const M={chioma:'emily',tunde:'oliver',amina:'priya',kelechi:'jack'};Object.keys(M).forEach(o=>{if(S.rel[o]){S.rel[M[o]]=S.rel[o];delete S.rel[o]}});if(M[S.vis])S.vis=M[S.vis]}
+  S.inbox=S.inbox||[];S.chat=S.chat||{};S.style=S.style||'short';S.deco=S.deco||[];S.paint=S.paint||{wall:'#f3ead7',floor:'#d8b98a'};S.sk=S.sk||{cook:0,fit:0};if(S.age==null)S.age=16+Math.floor(S.t/1440/YEAR);S.shirts=S.shirts||[S.color];S.skin=S.skin||'#8d5a3b';S.hair=S.hair||'#1d1410';if(S.al==null)S.al=Math.floor(S.t/1440/7);S.need=S.need||{hunger:80,fun:70,social:60,hygiene:80};if(S.nt==null)S.nt=S.t;if(S.cash==null)S.cash=S.fam.pocket;if(S.evT==null)S.evT=S.t+300;S.att=S.att||0;S.apps=S.apps||[];if(S.lastSch==null)S.lastSch=-1;if(S.lastApp==null)S.lastApp=-1;beginPlay()}
+function beginPlay(){
+  closeM();buildPlayer();renderDeco();setScene(S.inside,S.vis);P.position.set(S.x,0,S.z);
+  $('hud').style.display='flex';$('joy').style.display='block';$('look').style.display='block';$('hn').textContent=S.name;$('hint').style.display='block';
+}
+
+/* ===== 3D world (world/) ===== */
+const R=new THREE.WebGLRenderer({canvas:$('c'),antialias:false});
+R.setPixelRatio(Math.min(devicePixelRatio||1,2));
+const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(60,1,.1,200);
+const hemi=new THREE.HemisphereLight(0xffffff,0x557755,.9),sun=new THREE.DirectionalLight(0xffffff,.6);
+sun.position.set(10,20,10);sc.add(hemi,sun);
+sc.background=new THREE.Color(0x9ad3ff);const OUT=new THREE.Group(),INN=new THREE.Group();sc.add(OUT,INN);
+function box(g,w,h,d,c,x,y,z){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshLambertMaterial({color:c}));m.position.set(x,y,z);g.add(m);return m}
+function cyl(g,rt,rb,h,c,x,y,z,seg){const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg||8),new THREE.MeshLambertMaterial({color:c}));m.position.set(x,y,z);g.add(m);return m}
+function person(color,hair,skin,o){o=o||{};skin=skin||0x8d5a3b;hair=hair||0x1d1410;const g=new THREE.Group(),L=c=>new THREE.MeshLambertMaterial({color:c}),pants=o.pants||0x33384a;
+  const sub=(x,y,z)=>{const q=new THREE.Group();q.position.set(x,y,z);g.add(q);return q};
+  const sph=(q,r,c,x,y,z)=>{const m=new THREE.Mesh(new THREE.SphereGeometry(r,10,8),L(c));m.position.set(x,y,z);q.add(m);return m};
+  const lL=sub(-.17,.8,0),lR=sub(.17,.8,0);[lL,lR].forEach(q=>{cyl(q,.13,.12,.72,pants,0,-.36,0,6);box(q,.24,.14,.4,0x222222,0,-.78,.07)});
+  const torso=sub(0,0,0);cyl(torso,.35,.4,1.1,color,0,.95,0);cyl(torso,.1,.1,.2,skin,0,1.55,0,6);if(o.dress)cyl(torso,.38,.62,.7,color,0,.55,0,10);
+  const aL=sub(-.46,1.45,0),aR=sub(.46,1.45,0);[aL,aR].forEach(q=>{cyl(q,.1,.09,.62,color,0,-.31,0,6);sph(q,.09,skin,0,-.68,0)});
+  const head=sub(0,1.8,0);sph(head,.3,skin,0,0,0);[-.3,.3].forEach(x=>sph(head,.06,skin,x,0,0));
+  [-.11,.11].forEach(x=>{sph(head,.04,0x111111,x,.02,.27);box(head,.12,.02,.02,hair,x,.12,.27)});sph(head,.04,skin,0,-.03,.3);box(head,.1,.03,.02,0x7a2e2e,0,-.13,.28);
+  const st=o.style||'short';
+  if(st!=='bald'){const m=new THREE.Mesh(new THREE.SphereGeometry(.33,12,8,0,Math.PI*2,0,Math.PI/2),L(st==='cap'?(o.hat||0x2255aa):hair));m.position.y=.04;head.add(m)}
+  if(st==='long')box(head,.62,.75,.22,hair,0,-.3,-.2);
+  if(st==='bun')sph(head,.15,hair,0,.38,-.05);
+  if(st==='curly')[[-.22,.22],[.22,.22],[0,.32],[-.3,0],[.3,0],[0,.1]].forEach(([x,y])=>sph(head,.16,hair,x,y+.05,-.04));
+  if(st==='cap')box(head,.4,.03,.25,o.hat||0x2255aa,0,.1,.3);
+  if(o.glasses)[-.11,.11].forEach(x=>{const t=new THREE.Mesh(new THREE.TorusGeometry(.07,.012,6,12),L(0x222222));t.position.set(x,.02,.29);head.add(t)});
+  const sh=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.02,12),new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:.25}));sh.position.y=.02;g.add(sh);
+  g.userData={lL,lR,aL,aR,torso,head};return g}
+function anim(g,sp,t){const u=g&&g.userData;if(!u||!u.lL)return;const a=Math.sin(t*9)*.7*sp;u.lL.rotation.x=a;u.lR.rotation.x=-a;u.aL.rotation.x=-a*.8;u.aR.rotation.x=a*.8;u.head.rotation.y=Math.sin(t*1.3)*.15*(1-sp);u.torso.scale.y=1+Math.sin(t*2.2)*.012}
+
+const outRects=[],inRects=[],acts=[],movers=[];
+// neighbourhood
+box(OUT,290,.1,90,0x6fb35a,0,-.05,0);box(OUT,290,.12,6,0x4a4f57,0,0,3);
+for(let x=-136;x<136;x+=6)box(OUT,2.5,.14,.25,0xf0f0f0,x,0,3);
+const WM=new THREE.MeshBasicMaterial({color:0x9fd0f0});const wn=(x,y,z)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1.4,1.2,.12),WM);m.position.set(x,y,z);OUT.add(m)};
+const HC=[0xffd9a0,0xb9d9ff,0xd9f2b9,0xf2c6d9,0xe3d3ff];
+[[0,-8,0xffd9a0],[-14,-8,0xb9d9ff],[14,-8,0xd9f2b9],[-14,15,0xf2c6d9],[14,15,0xe3d3ff],[-28,-8,0xffe6a8],[28,15,0xc9e8e0]].forEach(([x,z,c])=>{
+  box(OUT,8,4,6,c,x,2,z);box(OUT,9,1,7,0xb5523b,x,4.5,z);outRects.push([x,z,8,6]);
+  const fz=z<3?z+3:z-3;box(OUT,1.4,2.4,.2,0x6b4226,x,1.2,fz+(z<3?.05:-.05));const sg=z<3?1:-1;[-2.4,2.4].forEach(d=>wn(x+d,2.4,fz+.07*sg));[-3.2,3.2].forEach((d,i)=>{const f=new THREE.Mesh(new THREE.SphereGeometry(.28,6,6),new THREE.MeshLambertMaterial({color:i?0xff6b9a:0xffd23f}));f.position.set(x+d,.3,fz+sg);OUT.add(f)});});
+box(OUT,10,4,7,0x6fa8dc,28,2,-8);box(OUT,11,1,8,0x274c77,28,4.5,-8);outRects.push([28,-8,10,7]);box(OUT,1.8,2.6,.2,0x2b2b2b,28,1.3,-4.45);box(OUT,4,.06,3,0x3a86ff,28,.09,-3.4);
+box(OUT,10,4,7,0xc9b6e8,-28,2,15);box(OUT,11,1,8,0x5a3d8a,-28,4.5,15);outRects.push([-28,15,10,7]);box(OUT,1.8,2.6,.2,0x2b2b2b,-28,1.3,11.55);box(OUT,4,.06,3,0x9b5de5,-28,.09,10.4);
+Array.from({length:16},(_,i)=>-120+i*16).forEach(x=>{cyl(OUT,.08,.1,4,0x333333,x,2,-.9,6);const b=new THREE.Mesh(new THREE.SphereGeometry(.3,8,6),new THREE.MeshBasicMaterial({color:0xfff2b0}));b.position.set(x,4.1,-.9);OUT.add(b)});
+box(OUT,8,4,6,0xf4a261,0,2,15);box(OUT,9,1,7,0x9c4a1a,0,4.5,15);outRects.push([0,15,8,6]);box(OUT,1.4,2.4,.2,0x6b4226,0,1.2,11.95);box(OUT,4,.06,3,0xf4a261,0,.09,10.6);box(OUT,6,.8,.3,0xfff1d0,0,3.3,11.8);
+const DIST=[{n:'Hillcrest Gardens',code:'HG',st:['Hillcrest Rise','Orchard Lane'],ox:-90,gr:0x86a55a,wall:[0xc9a27e,0xb08968,0xd8c3a5,0xa68a64,0xbfa58a],roof:0x6b3f2a},{n:'Maple Close',code:'MC',st:['Maple Close','Elm Road'],ox:0},{n:'Riverside Terrace',code:'RT',st:['River Walk','Wharf Street'],ox:90,gr:0x7ab8a0,wall:[0xf4f1ea,0xdfe9f2,0xe8e0f0,0xd7ecec,0xfbe9d0],roof:0x3b6ea5}];
+const areaOf=x=>DIST.find(d=>Math.abs(x-d.ox)<=45)||DIST[1];
+const addr=(x,z)=>{const d=areaOf(x),i=[-28,-14,0,14,28].indexOf(Math.round(x-d.ox)),no=z<3;return `${no?2*(i+1):2*i+1} ${d.st[no?0:1]}, ${d.n}`};
+function house(x,z,c,roof){box(OUT,8,4,6,c,x,2,z);box(OUT,9,1,7,roof,x,4.5,z);outRects.push([x,z,8,6]);const fz=z<3?z+3:z-3,sg=z<3?1:-1;box(OUT,1.4,2.4,.2,0x6b4226,x,1.2,fz+.05*sg);[-2.4,2.4].forEach(d=>wn(x+d,2.4,fz+.07*sg))}
+const HP=[[-28,-8],[-14,-8],[0,-8],[14,-8],[28,-8],[-28,15],[-14,15],[0,15],[14,15],[28,15]];
+DIST.filter(d=>d.ox).forEach(d=>{box(OUT,84,.04,84,d.gr,d.ox,.01,0);HP.forEach(([rx,rz],i)=>house(d.ox+rx,rz,d.wall[i%5],d.roof));
+  for(let i=0;i<7;i++){const x=d.ox-36+i*12,z=i%2?-22:24;cyl(OUT,.2,.25,1.6,0x6b4226,x,.8,z,6);const l=new THREE.Mesh(new THREE.SphereGeometry(1.3,8,6),new THREE.MeshLambertMaterial({color:0x2f8f3e}));l.position.set(x,2.4,z);OUT.add(l)}});
+box(OUT,80,.05,6,0x4aa3df,90,.03,-30);outRects.push([90,-30,80,6]);
+DIST.forEach(d=>{box(OUT,2.6,.2,1.2,0x555555,d.ox+6,2.3,-2);box(OUT,.15,2.2,1,0x555555,d.ox+4.8,1.1,-2);box(OUT,.15,2.2,1,0x555555,d.ox+7.2,1.1,-2);box(OUT,2.2,.9,.1,0xd1332b,d.ox+6,1.2,-2.5)});
+const mk2=[box(OUT,1.2,1.2,1.2,0xf4a261,0,5.8,12),box(OUT,1.2,1.2,1.2,0x3a86ff,28,5.8,-5),box(OUT,1.2,1.2,1.2,0x9b5de5,-28,5.8,12)];
+const marker=box(OUT,1.2,1.2,1.2,0xffd23f,0,5.8,-5);box(OUT,4,.06,3,0xffd23f,0,.09,-3.6);
+for(let i=0;i<14;i++){const x=-36+i*5.5+(i%3),z=(i%2?-20:24)+(i%4);cyl(OUT,.2,.25,1.6,0x6b4226,x,.8,z,6);const l=new THREE.Mesh(new THREE.SphereGeometry(1.3,8,6),new THREE.MeshLambertMaterial({color:0x2f8f3e}));l.position.set(x,2.4,z);OUT.add(l);}
+// life in the street: a car and two walkers (placeholder traffic/NPCs)
+const car=new THREE.Group();box(car,3,.8,1.6,0xd1332b,0,.6,0);box(car,1.6,.7,1.4,0xf5f5f5,0,1.3,0);car.position.set(-40,0,4.4);OUT.add(car);movers.push({o:car,v:6,ax:'x',min:-138,max:138,wrap:1});
+[[0x7a4bd1,-2.4,2,0,16],[0x1fa37a,8.5,-2.2,-30,30]].forEach(([c,z,v,mn,mx])=>{const n=person(c);n.position.set(mn,0,z);OUT.add(n);movers.push({o:n,v,ax:'x',min:mn,max:mx,walk:1})});
+
+NP.forEach(n=>{n.g=person(n.color,n.hair,n.skin,n.o);OUT.add(n.g)});
+// home interior
+const HFL=box(INN,10,.1,10,0xd8b98a,0,-.05,0),HW=[box(INN,10,4,.2,0xf3ead7,0,2,-5),box(INN,.2,4,10,0xf3ead7,-5,2,0),box(INN,.2,4,10,0xf3ead7,5,2,0)];
+box(INN,1.8,.04,1.2,0x2e8b57,0,.07,4.2);
+box(INN,3,1,1.4,0x8a5a2b,-3,.5,-4);box(INN,.9,.06,.6,0x333,-3,1.05,-4.1);        // desk + laptop
+box(INN,2.2,.6,3.6,0x3d6fb6,3,.3,-3.5);box(INN,1.6,.2,.6,0xffffff,3,.7,-4.9);       // bed
+box(INN,1.2,2.4,1.2,0xf4f4f4,4,1.2,2);                                            // fridge
+box(INN,3,.8,1.2,0x9b3d3d,-3.5,.4,1.5);box(INN,.15,1.2,2,0x111827,-4.85,1.8,1.5);box(INN,.8,1,.4,0x7a5230,-3.8,.5,4.2);box(INN,1.6,1,.8,0xd9d9d9,0,.5,-4.4);box(INN,.5,.06,.5,0x333333,0,1.03,-4.4);box(INN,1,2.2,1.1,0xbfe3f2,4.3,1.1,-.1);                                            // sofa
+inRects.push([0,-4.4,1.6,.8],[4.3,-.1,1,1.1],[-3,-4,3,1.4],[3,-3.5,2.2,3.6],[4,2,1.2,1.2],[-3.5,1.5,3,1.2]);
+
+const INN2=new THREE.Group(),hostG=new THREE.Group();sc.add(INN2);INN2.add(hostG);INN2.visible=false;
+box(INN2,10,.1,10,0xc9a46c,0,-.05,0);box(INN2,10,4,.2,0xdcefe8,0,2,-5);box(INN2,.2,4,10,0xdcefe8,-5,2,0);box(INN2,.2,4,10,0xdcefe8,5,2,0);box(INN2,1.8,.04,1.2,0xb5523b,0,.07,4.2);
+box(INN2,3,2.2,.8,0x7a4a2a,-3,1.1,-4.3);box(INN2,2.4,.9,1.6,0x9c6b3f,3,.45,-3.5);box(INN2,1.2,1,1.2,0x333344,4,.5,2);box(INN2,1,.7,.1,0x111111,4,1.35,2);box(INN2,3,.8,1.2,0x2a7f62,-3.5,.4,1.5);
+function buildHost(n){while(hostG.children.length)hostG.remove(hostG.children[0]);hostG.add(person(n.color,n.hair,n.skin,n.o));hostG.position.set(0,0,-1.8)}
+const P=new THREE.Group();sc.add(P);let pBody=null;
+function buildPlayer(){while(P.children.length)P.remove(P.children[0]);P.add(person(new THREE.Color(S.color),S.hair,S.skin,{style:S.style||'short'}))}
+function setScene(inside,vis){SFX.door();S.inside=inside;S.vis=vis||null;const hn=S.vis&&NP.find(x=>x.id===S.vis);if(S.vis&&!hn)S.vis=null;OUT.visible=!inside;INN.visible=inside&&!S.vis;INN2.visible=inside&&!!S.vis;if(S.vis)buildHost(hn);
+  if(inside)sc.background=new THREE.Color(0xcfe3ee)}
+function enterHome(){setScene(true);P.position.set(0,0,3);toast('Inside your home');store()}
+function leaveHome(){setScene(false);P.position.set(0,0,-3.4);toast('Back outside');store()}
+
+// interactables
+const A_OUT=[{x:0,z:-4,r:4.5,label:'Enter home',fn:enterHome},{x:28,z:-3.4,r:4.5,label:'Enter school',fn:schoolMenu},{x:-28,z:10.8,r:4.5,label:'University admissions',fn:uniMenu},{x:0,z:11,r:4.5,label:'Enter shop',fn:shopMenu},...[[-28,-5],[28,12]].map(([x,z])=>({x,z,r:3,label:'Neighbour\'s house',fn:()=>toast('Not your home. Yours has the yellow mat and marker.')})),...DIST.map(d=>({x:d.ox+6,z:-1,r:2.4,label:'Bus stop',fn:busMenu})),...DIST.filter(d=>d.ox).flatMap(d=>HP.filter(([rx,rz])=>!NP.some(n=>n.cx===d.ox+rx&&n.door[1]===(rz<3?-5:12))).map(([rx,rz])=>({x:d.ox+rx,z:rz<3?-5:12,r:3,label:"Neighbour's house",fn:()=>toast('A private home at '+addr(d.ox+rx,rz)+'. Meet the neighbours outside first.')}))),...NP.map(n=>({x:n.door[0],z:n.door[1],r:3.5,label:n.name+"'s house",fn:()=>visitDoor(n)}))];
+const A_IN=[{x:-3,z:-2.8,label:'Study desk',fn:deskMenu},
+ {x:3,z:-1.6,label:'Sleep until morning',fn:()=>{S.energy=100;S.t=S.t%1440<420?Math.floor(S.t/1440)*1440+420:(Math.floor(S.t/1440)+1)*1440+420;gain('hunger',-25);gain('hygiene',-10);gain('fun',-5);S.nt=S.t;toast('You slept well. It is 07:00.');store()}},
+ {x:-3,z:.2,r:2.2,label:'Relax and watch TV',fn:()=>{const cz=raining()?10:0;gain('fun',30+cz);S.t+=30;toast('You relax with some TV. Fun +'+(30+cz)+(cz?' (cosy rainy day)':''));store()}},
+ {x:2.8,z:-.1,r:1.9,label:'Take a shower',fn:()=>{gain('hygiene',70);S.t+=15;toast('Fresh and clean. Hygiene +70');store()}},
+ {x:4,z:.7,label:'Eat a meal',fn:()=>{S.energy=Math.min(100,S.energy+15);S.t+=20;gain('hunger',40);toast('Your family fed you. Hunger +40, energy +15');store()}},
+ {x:-3.2,z:3.2,r:1.7,label:'Decorate home',fn:decoMenu},
+ {x:0,z:-3.2,r:1.6,label:'Cook a meal (£2)',fn:cook},
+ {x:0,z:-.9,r:1.5,label:'Exercise',fn:workout},
+ {x:0,z:3.6,label:'Leave home',fn:leaveHome}];
+
+/* ===== input (interaction.js) ===== */
+let jx=0,jy=0,yaw=0,lookId=null,lx=0;
+(function(){const j=$('joy'),k=$('knob');let id=null;
+ const set=e=>{const r=j.getBoundingClientRect(),cx=r.left+60,cy=r.top+60;let dx=e.clientX-cx,dy=e.clientY-cy;const d=Math.hypot(dx,dy),m=45;if(d>m){dx*=m/d;dy*=m/d}k.style.left=(40+dx)+'px';k.style.top=(40+dy)+'px';jx=dx/m;jy=dy/m};
+ j.onpointerdown=e=>{id=e.pointerId;try{j.setPointerCapture(id)}catch(_){}set(e)};j.onpointermove=e=>{if(e.pointerId===id)set(e)};
+ j.onpointerup=j.onpointercancel=()=>{id=null;jx=jy=0;k.style.left=k.style.top='40px'};
+ const L=$('look');L.onpointerdown=e=>{lookId=e.pointerId;try{L.setPointerCapture(lookId)}catch(_){}lx=e.clientX};
+ L.onpointermove=e=>{if(e.pointerId===lookId){yaw-=(e.clientX-lx)*.008;lx=e.clientX}};L.onpointerup=L.onpointercancel=()=>lookId=null;})();
+const keys={};addEventListener('keydown',e=>keys[e.key.toLowerCase()]=1);addEventListener('keyup',e=>keys[e.key.toLowerCase()]=0);
+let near=null;$('act').onclick=()=>{if(near&&!modalOpen){SFX.tap();near.fn()}};
+
+/* ===== main loop (main.js) ===== */
+const blocked=(x,z,rs)=>rs.some(r=>Math.abs(x-r[0])<r[2]/2+.4&&Math.abs(z-r[1])<r[3]/2+.4);
+function resize(){R.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}
+addEventListener('resize',resize);resize();
+let last=performance.now(),saveT=0;
+function update(dt){
+  movers.forEach(m=>{m.o.position[m.ax]+=m.v*dt;if(m.wrap){if(m.o.position[m.ax]>m.max)m.o.position[m.ax]=m.min}else if(m.o.position[m.ax]>m.max||m.o.position[m.ax]<m.min){m.v=-m.v}
+    if(m.walk)m.o.rotation.y=m.v>0?Math.PI/2:-Math.PI/2});
+  marker.rotation.y+=dt*2;mk2.forEach((m,i)=>{m.rotation.y+=dt*2;m.position.y=5.8+Math.sin(performance.now()/400+i)*.3});marker.position.y=5.8+Math.sin(performance.now()/400)*.3;
+  if(!S){cam.position.set(10,8,16);cam.lookAt(0,2,-4);return}
+  if(!modalOpen){
+    S.t+=dt*2;S.energy=Math.max(0,S.energy-dt*(.07+(!S.inside&&raining()?.06:0))*(1-(S.sk?S.sk.fit:0)/250));
+    let ix=jx+(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),iy=jy+(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);
+    const mag=Math.min(1,Math.hypot(ix,iy));mvSp=mag>.1?mag:0;
+    if(mag>.1){
+      const sp=(S.energy<5?3:5)*mag,fx=-Math.sin(yaw),fz=-Math.cos(yaw),rx=Math.cos(yaw),rz=-Math.sin(yaw);
+      const mx=(rx*ix+fx*-iy)/Math.max(.001,Math.hypot(ix,iy)),mz=(rz*ix+fz*-iy)/Math.max(.001,Math.hypot(ix,iy));
+      const rs=S.inside?inRects:outRects,lim=S.inside?4.4:128,lz=S.inside?4.4:38;
+      let nx=P.position.x+mx*sp*dt,nz=P.position.z+mz*sp*dt;
+      nx=Math.max(-lim,Math.min(lim,nx));nz=Math.max(-lz,Math.min(lz,nz));
+      if(!blocked(nx,P.position.z,rs))P.position.x=nx;if(!blocked(P.position.x,nz,rs))P.position.z=nz;
+      P.rotation.y=Math.atan2(mx,mz);P.position.y=Math.abs(Math.sin(performance.now()/110))*.08;
+    }
+    saveT+=dt;if(saveT>10){saveT=0;S.x=P.position.x;S.z=P.position.z;store()}
+  }
+  // day / night
+  const h=(S.t/60)%24,k=h>=7&&h<18?1:(h>=5&&h<7)?(h-5)/2:(h>=18&&h<20)?1-(h-18)/2:0;
+  const rn=raining();if(!S.inside){sc.background=new THREE.Color(0x0b1030).lerp(new THREE.Color(0x9ad3ff),k);if(rn)sc.background.lerp(new THREE.Color(0x6e7b86),.65)}
+  $('rain').style.display=rn&&!S.inside?'block':'none';
+  hemi.intensity=.35+.55*k-(rn?.15:0);sun.intensity=.15+.5*k;
+  $('hc').textContent=DN[day()%7]+' '+String(Math.floor(h)).padStart(2,'0')+':'+String(Math.floor(S.t%60)).padStart(2,'0');
+  const now=performance.now(),tt=now/1000;if(modalOpen)mvSp=0;
+  NP.forEach(n=>{const st=nstate(n);n.g.visible=st==='out';if(st!=='out'){n.k=0;n.appr=0}if(st==='out'){const a=S.t*.006+n.ph,bx=n.cx+16*Math.sin(a),k0=n.k||0;n.k=k0+(((now<(n.appr||0)&&!S.inside)?1:0)-k0)*Math.min(1,dt*1.5);
+    n.g.position.set(bx+(P.position.x+1.4-bx)*n.k,0,n.lane+(P.position.z+.4-n.lane)*n.k);
+    n.g.rotation.y=n.k>.5?Math.atan2(P.position.x-n.g.position.x,P.position.z-n.g.position.z):(Math.cos(a)>0?1.57:-1.57);anim(n.g,n.k>.97?0:1,tt+n.ph)}});
+  anim(P.children[0],mvSp,tt);if(S.vis)anim(hostG.children[0],0,tt);if(!S.inside)chatter();updateBubbles(now);
+  if(!S.inside){const ar=areaOf(P.position.x).n;if(S.area==null)S.area=ar;else if(ar!==S.area){S.area=ar;toast('Welcome to '+ar)}}
+  if(!S.inside&&!modalOpen)NP.forEach(n=>{if(n.g.visible&&Math.hypot(n.g.position.x-P.position.x,n.g.position.z-P.position.z)<9){const r=rel(n.id);if((r.say==null?-999:r.say)<S.t-240){r.say=S.t;n.appr=performance.now()+7000;say(n,pick(GREET[r.f<20?0:r.f<40?1:2]))}});
+  if(S.msgT==null)S.msgT=S.t+240;if(S.t>=S.msgT&&!modalOpen&&!S.vis){S.msgT=S.t+rnd(240,420);texting()}
+  $('phoneBtn').textContent=(S.inbox||[]).length?'📱●':'📱';
+  if(S.vis&&hr()>=22){toast('It is late. Time to go home.');leaveVisit()}
+  WM.color.setHex(k>.5?0x9fd0f0:0xffd77a);
+  {const N=S.need,el=Math.min(240,S.t-(S.nt==null?S.t:S.nt));S.nt=S.t;if(el>0){N.hunger=cl(N.hunger-.1*el);N.fun=cl(N.fun-.07*el*(1-.1*comfort()));N.social=cl(N.social-.05*el);N.hygiene=cl(N.hygiene-.06*el);if(N.hunger<=0)S.energy=Math.max(0,S.energy-.04*el)}
+  $('nd').textContent='🍽'+Math.round(N.hunger)+' 🎮'+Math.round(N.fun)+' 💬'+Math.round(N.social)+' 🚿'+Math.round(N.hygiene)+' · '+ML(mood())+' '+(rn?'🌧':'☀️')}
+  if(!modalOpen&&!S.vis&&hr()>=7&&hr()<21&&S.t>=(S.evT==null?1e9:S.evT))lifeEvent();
+  {const wk=Math.floor(day()/7);if(S.al==null)S.al=wk;if(wk>S.al){S.al=wk;const a={Low:15,Middle:30,Wealthy:80}[S.fam.cls];S.cash+=a;toast('Your family gave you '+gbp(a)+' pocket money for the week.');SFX.chime();store()}}
+  {const a=age();if(S.age==null)S.age=a;if(a>S.age&&!modalOpen&&!S.vis){S.age=a;birthday()}}
+  if(amb)amb.gain.value=S.muted?0:(S.inside?.01:(rn?.07:.04));
+  $('he').style.width=Math.round(S.energy)+'%';
+  // nearest interactable
+  const list=S.inside?(S.vis?A_V():A_IN):A_OUT.concat(NP.filter(n=>n.g.visible).map(n=>({x:n.g.position.x,z:n.g.position.z,r:2.6,label:'Talk to '+n.name,fn:()=>talk(n.id)})));near=null;let bd=99;
+  list.forEach(a=>{const d=Math.hypot(a.x-P.position.x,a.z-P.position.z);if(d<(a.r||2.8)&&d<bd){bd=d;near=a}});
+  const ab=$('act');if(near&&!modalOpen){ab.style.display='block';ab.textContent=near.label}else ab.style.display='none';
+  $('hint').textContent=S.inside?'Walk to the desk to study and take an exam':(S.area||'Maple Close')+' · Yellow: home · Blue: school · Purple: university · Orange: shop';
+  // camera
+  const d=S.inside?7:9,hh=S.inside?7:6;
+  camT={x:P.position.x,y:1.4,z:P.position.z};cam.position.set(P.position.x+Math.sin(yaw)*d,hh,P.position.z+Math.cos(yaw)*d);cam.lookAt(P.position.x,1.4,P.position.z);
+}
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);R.render(sc,cam);requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+addEventListener('pagehide',()=>{if(S){S.x=P.position.x;S.z=P.position.z;store()}});
+newLifeScreen();
+</script></body></html>
