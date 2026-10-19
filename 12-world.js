@@ -105,12 +105,12 @@ const areaOf=x=>DIST.find(d=>Math.abs(x-d.ox)<=50)||DIST[1];
 const addr=(x,z)=>{const d=areaOf(x);const cols=[-42,-28,-14,0,14,28,42];let i=cols.indexOf(Math.round(x-d.ox));if(i<0)i=3;const no=z<3;return (no?2*(i+1):2*i+1)+' '+(d.st[no?0:1]||d.n)+', '+d.n};
 
 const HP=[[-42,-22],[-28,-22],[-14,-22],[0,-22],[14,-22],[28,-22],[42,-22],[-42,-8],[-28,-8],[-14,-8],[0,-8],[14,-8],[28,-8],[42,-8],[-42,15],[-28,15],[-14,15],[0,15],[14,15],[28,15],[42,15],[-42,28],[-28,28],[-14,28],[0,28],[14,28],[28,28],[42,28]];
-const WALLS=['#ffd9a0','#b9d9ff','#d9f2b9','#f2c6d9','#e3d3ff','#c9a27e','#b08968'];
+const HOUSE_COLS=['#ffd9a0','#b9d9ff','#d9f2b9','#f2c6d9','#e3d3ff','#c9a27e','#b08968'];
 DIST.forEach(d=>{
   HP.forEach(([rx,rz],i)=>{
     if(d.ox===0&&rx===0&&rz===-8)return;
     const x=d.ox+rx,z=rz;
-    houses.push({x,z,w:8,d:6,col:WALLS[i%WALLS.length],roof:'#b5523b',label:''});
+    houses.push({x,z,w:8,d:6,col:HOUSE_COLS[i%HOUSE_COLS.length],roof:'#b5523b',label:''});
     outRects.push([x,z,8,6]);
   });
 });
