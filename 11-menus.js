@@ -18,7 +18,7 @@ const sw=(list,v)=>`<div>${list.map((c,i)=>`<span class="sw${i?'':' on'}" style=
 function newLifeScreen(){
   $('hud').style.display=$('joy').style.display=$('look').style.display=$('hint').style.display='none';
   const sv=loadSave();
-  modal(`<h2>Life: Your Story</h2><p class="m">Prototype 0.9 · 18+</p>
+  modal(`<h2>Life: Your Story</h2><p class="m">Prototype 1.0 · 2D · 18+</p>
   ${sv?`<button class="o go" onclick="continueGame()">Continue as ${sv.name}</button><p class="m">Or start over:</p>`:''}
   <p>Your name</p><input type="text" id="nm" maxlength="14" placeholder="Enter a name" autocomplete="off">
   <p>Gender</p><div><span class="sw on" style="background:#2b4a63;display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;font-size:14px" onclick="pickedGender='male';mark(this)">Male</span><span class="sw" style="background:#2b4a63;display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;font-size:14px" onclick="pickedGender='female';mark(this)">Female</span></div>
@@ -34,6 +34,6 @@ function startLife(){
 function continueGame(){S=loadSave();S.seen=S.seen||{};S.rel=S.rel||{};S.vis=S.vis||null;{const M={chioma:'emily',tunde:'oliver',amina:'priya',kelechi:'jack'};Object.keys(M).forEach(o=>{if(S.rel[o]){S.rel[M[o]]=S.rel[o];delete S.rel[o]}});if(M[S.vis])S.vis=M[S.vis]}
   S.inbox=S.inbox||[];S.chat=S.chat||{};S.style=S.style||'spiky';S.gender=S.gender||'male';S.deco=S.deco||[];S.paint=S.paint||{wall:'#f3ead7',floor:'#d8b98a'};S.sk=S.sk||{cook:0,fit:0,mind:0};S.sk.mind=S.sk.mind||0;S.vehicles=S.vehicles||[];if(S.age==null)S.age=18+Math.floor(S.t/1440/YEAR);if(S.age<18)S.age=18;S.shirts=S.shirts||[S.color];S.skin=S.skin||'#8d5a3b';S.hair=S.hair||'#1d1410';if(S.al==null)S.al=Math.floor(S.t/1440/7);S.need=S.need||{hunger:80,fun:70,social:60,hygiene:80};if(S.nt==null)S.nt=S.t;if(S.cash==null)S.cash=S.fam.pocket;if(S.evT==null)S.evT=S.t+300;S.att=S.att||0;S.apps=S.apps||[];if(S.lastSch==null)S.lastSch=-1;if(S.lastApp==null)S.lastApp=-1;beginPlay()}
 function beginPlay(){
-  closeM();buildPlayer();renderDeco();setScene(S.inside,S.vis);P.position.set(S.x,0,S.z);
+  closeM();buildPlayer();renderDeco();setScene(S.inside,S.vis);P.position.x=S.x||0;P.position.z=S.z||5;
   $('hud').style.display='flex';$('joy').style.display='block';$('look').style.display='block';$('hn').textContent=S.name;$('hint').style.display='block';if(typeof renderVehicles==='function')renderVehicles();
 }
