@@ -63,13 +63,12 @@ function topic(id,k){
   r.f=Math.max(0,Math.min(100,r.f+g));r.d[k]=day();gain('social',8);S.t+=10;S.energy=Math.max(0,S.energy-1);store();
   talk(id,`${res} (${g>=0?'+':''}${g.toFixed(1)})`,YOU[k]);
 }
-const BUB=[];let camT={x:0,y:1.4,z:0},mvSp=0;
+const BUB=[];
 function say(who,text,ms){const i=BUB.findIndex(b=>b.who===who);if(i>=0){if(BUB[i].el)BUB[i].el.remove();BUB.splice(i,1)}BUB.push({who,text:text.replace(/\{p\}/g,S.name),until:performance.now()+(ms||3800),el:null})}
-function toScreen(x,y,z){const c=cam.position,t=camT,fx=t.x-c.x,fy=t.y-c.y,fz=t.z-c.z,fl=Math.hypot(fx,fy,fz),f=[fx/fl,fy/fl,fz/fl],rl=Math.hypot(f[2],f[0]),r=[-f[2]/rl,0,f[0]/rl],u=[-r[2]*f[1],r[2]*f[0]-r[0]*f[2],r[0]*f[1]],d=[x-c.x,y-c.y,z-c.z],X=d[0]*r[0]+d[2]*r[2],Y=d[0]*u[0]+d[1]*u[1]+d[2]*u[2],Z=d[0]*f[0]+d[1]*f[1]+d[2]*f[2];if(Z<.5)return null;const th=Math.tan(PI/6),nx=X/(Z*th*cam.aspect),ny=Y/(Z*th);return[(nx*.5+.5)*innerWidth,(.5-ny*.5)*innerHeight,Math.abs(nx)<1.15&&Math.abs(ny)<1.15]}
 function updateBubbles(now){const box=$('bub');for(let i=BUB.length-1;i>=0;i--){const b=BUB[i];if(now>b.until){if(b.el)b.el.remove();BUB.splice(i,1);continue}
   const w=b.who,pos=w==='me'?P.position:w.g.position,vis=w==='me'||(w.g&&w.g.visible&&!S.inside);
   if(!b.el){b.el=document.createElement('div');b.el.className='b';b.el.textContent=b.text;box.appendChild(b.el)}
-  const sp=vis&&!modalOpen?toScreen(pos.x,pos.y+2.6,pos.z):null;if(sp&&sp[2]){b.el.style.display='block';b.el.style.left=sp[0]+'px';b.el.style.top=sp[1]+'px'}else b.el.style.display='none'}}
+  const sp=vis&&!modalOpen&&typeof toScreen==='function'?toScreen(pos.x,0,pos.z):null;if(sp&&sp[2]){b.el.style.display='block';b.el.style.left=sp[0]+'px';b.el.style.top=sp[1]+'px'}else b.el.style.display='none'}}
 const GREET=[['Hello there!','Morning!','Hi!'],['Hey {p}!','Oh hi {p}, got a minute?'],['{p}! Come say hi!','Hey {p}! Over here!']];
 const NCH={joke:'Want to hear the one about the bus driver?',chat:'Any news on the street today?',day:'How has your day been so far?',comp:'Love your jacket today!'},NRE=['Ha, brilliant!','Oh really? Tell me more.',"Can't complain!",'You always know what to say.'];
 const PAIRS=[['n0_amy','n1_ben'],['n2_chloe','n3_david'],['n4_emma','n5_finn'],['n6_grace','n7_harry']];
@@ -151,7 +150,7 @@ function visitDoor(n){
   const f=rel(n.id).f;
   if(f<40)toast('You do not know '+n.name+' well enough yet. Chat when you see them outside.');
   else if(nstate(n)!=='home')toast(n.name+' is home between 19:00 and 22:00, or when it rains.');
-  else{S.vis=n.id;setScene(true,n.id);P.position.set(0,0,2);toast('Visiting '+n.name);store()}
+  else{S.vis=n.id;setScene(true,n.id);P.position.x=0;P.position.z=2;toast('Visiting '+n.name);store()}
 }
-function leaveVisit(){const n=NP.find(x=>x.id===S.vis);setScene(false);P.position.set(n?n.door[0]:0,0,n?n.door[1]+(n.door[1]<0?-1:1):0);S.vis=null;toast('Back outside');store()}
+function leaveVisit(){const n=NP.find(x=>x.id===S.vis);setScene(false);P.position.x=n?n.door[0]:0;P.position.z=n?(n.door[1]+(n.door[1]<0?-1:1)):0;S.vis=null;toast('Back outside');store()}
 function A_V(){return[{x:0,z:3.2,label:'Leave',fn:leaveVisit},{x:0,z:-1.5,r:2.5,label:'Chat with host',fn:()=>talk(S.vis)}]}
