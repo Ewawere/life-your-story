@@ -6,8 +6,8 @@ const LAST=['Smith','Jones','Patel','Khan','Brown','Wilson','Taylor','Lee','Mart
 const PERS=[['Cheerful and outgoing.','joke','comp'],['Hardworking and serious.','day','joke'],['Shy but kind.','comp','chat'],['Loves neighbourhood gossip.','chat','day'],['Sporty and energetic.','day','chat'],['Calm and thoughtful.','chat','joke'],['Playful joker.','joke','comp'],['Quiet book lover.','comp','day'],['Ambitious student.','day','chat'],['Practical and direct.','chat','joke'],['Warm and welcoming.','chat','day'],['Easy-going musician.','comp','chat']];
 const COLS=[0xe76f51,0x2a9d8f,0x8e5cd9,0xf4a261,0x1d7874,0x355070,0xe9c46a,0x9b5de5,0xb56576,0x577590,0xe09f3e,0x3d5a80,0xd62828,0x023e8a,0x2d6a4f,0x9c6644,0x7b2cbf,0xfb8500];
 const NPC_SKINS=[0xf1c8a5,0xe8b998,0xa06a45,0x8d5a3b,0xc68642,0xffdbac];
-const NPC_HAIRS=[0x111111,0x1d1410,0x4a2c17,0xb5651d,0x2b1d14,0x6b4423];
-const STYLES=['short','long','bun','curly','cap','short'];
+const NPC_HAIRS=[0x111111,0x1d1410,0x4a2c17,0xb5651d,0x2b1d14,0x6b4423,0xf2c94c];
+const STYLES=['spiky','short','long','bun','curly','cap'];
 const SLOTS=[];
 const DISTS_OX=[-90,0,90];
 const RXS=[-42,-28,-14,0,14,28,42];
@@ -27,6 +27,8 @@ for(let i=0;i<100&&i<SLOTS.length;i++){
 }
 const OG=['Emily','Oliver','Priya','Jack','Sophie','Mohammed','Lucas','Hannah','Mei','Tomasz','Fatima','Daniel'];
 for(let i=0;i<12;i++)NP[i].name=OG[i];
+const FEM_NAMES=new Set(['Amy','Chloe','Emma','Grace','Isla','Kate','Mia','Olivia','Quinn','Ruby','Tara','Uma','Willow','Yara','Aisha','Carla','Elena','Farah','Hana','Jade','Luna','Nina','Priya','Sara','Ula','Winnie','Zoe','Ada','Cora','Dina','Faye','Holly','June','Lara','Nia','Opal','Pia','Sia','Tina','Val','Vera','Xena','Yvette','Zara','Anika','Celine','Esme','Gina','Iris','Kim','Mara','Rosa','Amara','Bea','Sophie','Hannah','Mei','Fatima','Emily']);
+NP.forEach((n,i)=>{n.gender=FEM_NAMES.has(n.name.split(' ')[0])?'female':'male';n.o=n.o||{};n.o.gender=n.gender;if(n.gender==='female'){if(!['long','bun','curly'].includes(n.o.style))n.o.style=(i%3===0?'long':i%3===1?'bun':'curly');n.o.dress=n.o.dress||(i%2===0);}else{if(n.o.style==='long'||n.o.style==='bun')n.o.style=i%3===0?'spiky':'short';}});
 function nstate(n){const h=hr();if(h>=22||h<7)return'sleep';if(h>=9&&h<14&&!raining())return'away';if(h>=19||raining())return'home';return'out'}
 const TOP={greet:['Say hello',3,'Hello! Good to see you.'],chat:['Chat about the neighbourhood',4,'You talk about the street and the weather.'],day:['Ask about their day',5,'You ask how the day has gone.'],joke:['Tell a joke',5,'You tell a joke from school.'],comp:['Give a compliment',4,'You say something kind about their style.']};
 const FL=f=>f<20?'Stranger':f<40?'Acquaintance':f<70?'Friend':'Close friend';
