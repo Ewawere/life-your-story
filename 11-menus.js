@@ -4,7 +4,7 @@ function progHTML(){
   <tr><td>Energy</td><td>${Math.round(S.energy)}%</td></tr>
   <tr><td>Pocket money</td><td>${gbp(S.cash)}</td></tr>
   ${SUBJ.map(s=>`<tr><td>${s}</td><td>knowledge ${S.know[s]}/100</td></tr>`).join('')}
-  <tr><td>Mood</td><td>${ML(mood())} (${Math.round(mood())})<br>Hunger ${Math.round(S.need.hunger)} · Fun ${Math.round(S.need.fun)}<br>Social ${Math.round(S.need.social)} · Hygiene ${Math.round(S.need.hygiene)}</td></tr><tr><td>Skills</td><td>Cooking ${Math.round((S.sk||{}).cook||0)} · Fitness ${Math.round((S.sk||{}).fit||0)}</td></tr><tr><td>Home comfort</td><td>${comfort()}/6 comfort · ${(S.deco||[]).length} items</td></tr><tr><td>Neighbours</td><td>${NP.map(n=>n.name+': '+FL(Math.round(rel(n.id).f)).join?FL(Math.round(rel(n.id).f)):FL(Math.round(rel(n.id).f))).join('<br>')}</td></tr><tr><td>School lessons</td><td>${S.att||0}</td></tr><tr><td>Applications</td><td>${(S.apps||[]).length?S.apps.map(a=>a.k+': '+(a.ok?'admitted'+(a.sch!=='None'?' ('+a.sch+' scholarship)':''):'not admitted')).join('<br>'):'None yet'}</td></tr>
+  <tr><td>Mood</td><td>${ML(mood())} (${Math.round(mood())})<br>Hunger ${Math.round(S.need.hunger)} · Fun ${Math.round(S.need.fun)}<br>Social ${Math.round(S.need.social)} · Hygiene ${Math.round(S.need.hygiene)}</td></tr><tr><td>Skills</td><td>Cooking ${Math.round((S.sk||{}).cook||0)} · Fitness ${Math.round((S.sk||{}).fit||0)}</td></tr><tr><td>Home comfort</td><td>${comfort()}/6 comfort · ${(S.deco||[]).length} items</td></tr><tr><td>Neighbours</td><td>${NP.map(n=>n.name+': '+FL(Math.round(rel(n.id).f))).join('<br>')}</td></tr><tr><td>School lessons</td><td>${S.att||0}</td></tr><tr><td>Applications</td><td>${(S.apps||[]).length?S.apps.map(a=>a.k+': '+(a.ok?'admitted'+(a.sch!=='None'?' ('+a.sch+' scholarship)':''):'not admitted')).join('<br>'):'None yet'}</td></tr>
   <tr><td>Exam history</td><td>${S.exams.length?S.exams.map(e=>e.g+' ('+e.pct+'%)').join(', '):'No exams taken yet'}</td></tr></table>`}
 function menu(){
   modal(`<h3>Menu</h3><button class="o" onclick="modal(progHTML(),true)">My progress</button><button class="o" onclick="modal(famHTML(),true)">My family</button><button class="o" onclick="store();toast('Game saved');closeM()">Save now</button><button class="o" onclick="if(confirm('Start a new life? Your current save will be replaced.'))newLifeScreen()">New life</button><button class="o" onclick="S.muted=!S.muted;store();menu()">Sound: ${S.muted?'Off':'On'}</button><button class="o" onclick="S.t+=60;store();toast('An hour passes');closeM()">Wait 1 hour</button><button class="o" onclick="closeM()">Resume</button>`);
@@ -15,11 +15,13 @@ let pickedColor=COLORS[0],pickedSkin=SKINS[0],pickedHair=HAIRS[0],pickedStyle='s
 const mark=el=>{[...el.parentNode.children].forEach(e=>e.classList.remove('on'));el.classList.add('on')};
 const sw=(list,v)=>`<div>${list.map((c,i)=>`<span class="sw${i?'':' on'}" style="background:${c}" onclick="${v}='${c}';mark(this)"></span>`).join('')}</div>`;
 function newLifeScreen(){
+  $('hud').style.display=$('joy').style.display=$('look').style.display=$('hint').style.display='none';
   const sv=loadSave();
   modal(`<h2>Life: Your Story</h2><p class="m">Prototype 0.9 · 18+</p>
-  <p>Your name</p><input id="nm" type="text" maxlength="16" placeholder="Enter a name" value="">
+  ${sv?`<button class="o go" onclick="continueGame()">Continue as ${sv.name}</button><p class="m">Or start over:</p>`:''}
+  <p>Your name</p><input type="text" id="nm" maxlength="14" placeholder="Enter a name" autocomplete="off">
   <p>Shirt colour</p>${sw(COLORS,'pickedColor')}<p>Skin tone</p>${sw(SKINS,'pickedSkin')}<p>Hair colour</p>${sw(HAIRS,'pickedHair')}<p>Hair style</p><div>${STY.map((x,i)=>`<span class="sw${i?'':' on'}" style="background:#2b4a63;display:inline-flex;align-items:center;justify-content:center;font-size:20px" onclick="pickedStyle='${x[0]}';mark(this)">${x[1]}</span>`).join('')}</div>
-  <button class="o ${sv?'':'go'}" onclick="startLife()">Begin a new life</button>`+(sv?`<button class="o go" onclick="continueGame()">Continue as ${sv.name}</button>`:''));
+  <button class="o ${sv?'':'go'}" onclick="startLife()">Begin a new life</button>`);
 }
 function startLife(){
   const nm=($('nm').value||'').trim()||'Alex';
