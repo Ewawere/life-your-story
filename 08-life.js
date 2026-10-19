@@ -3,7 +3,7 @@ let WX=null;
 const rainyDay=d=>WX!==null?WX:(Math.imul(d+7,2654435761)>>>0)%100<28;
 const rainStart=d=>11+((Math.imul(d+13,2654435761)>>>0)%100)%6;
 const raining=()=>{const h=hr();if(!rainyDay(day()))return false;const s=rainStart(day());return h>=s&&h<s+2};
-const YEAR=14,age=()=>16+Math.floor(day()/YEAR);
+const YEAR=14,age=()=>18+Math.floor(day()/YEAR);
 function birthday(){
   const gift={Low:20,Middle:50,Wealthy:150}[S.fam.cls],fr=NP.filter(n=>rel(n.id).f>=40);
   S.cash+=gift;fr.forEach(n=>{const r=rel(n.id);r.f=Math.min(100,r.f+3)});gain('fun',25);gain('social',15);SFX.chime();store();
