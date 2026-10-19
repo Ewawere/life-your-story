@@ -41,29 +41,7 @@ function buyVehicle(i){
   S.cash-=v.price;S.vehicles.push(v.id);renderVehicles();SFX.chime();store();
   toast('Bought '+v.name+'! Step outside to see it.');shopMenu();
 }
-let vehG=null;
-function renderVehicles(){
-  if(typeof OUT==='undefined')return;
-  if(vehG){OUT.remove(vehG);vehG=null}
-  vehG=new THREE.Group();OUT.add(vehG);
-  const own=S.vehicles||[];
-  if(own.includes('bike')){
-    box(vehG,.08,.08,1.1,0x222222,-2.2,.45,-3.2);box(vehG,.08,.08,1.1,0x222222,-1.5,.45,-3.2);
-    const w1=new THREE.Mesh(new THREE.TorusGeometry(.35,.04,8,16),new THREE.MeshLambertMaterial({color:0x111111}));w1.position.set(-2.2,.35,-3.2);w1.rotation.y=Math.PI/2;vehG.add(w1);
-    const w2=w1.clone();w2.position.x=-1.5;vehG.add(w2);
-    box(vehG,1.1,.08,.08,0x3a86ff,-1.85,.7,-3.2);
-  }
-  if(own.includes('car')){
-    box(vehG,3.2,.7,1.6,0x2a6f97,-6,.55,1.2);box(vehG,1.8,.55,1.5,0x1a4a66,-5.6,1.15,1.2);
-    [[-7,-.2],[-7,.2],[-5,-.2],[-5,.2]].forEach(([x,z])=>{
-      const w=new THREE.Mesh(new THREE.CylinderGeometry(.28,.28,.2,10),new THREE.MeshLambertMaterial({color:0x111}));w.rotation.z=Math.PI/2;w.position.set(x,.28,1.2+z);vehG.add(w);
-    });
-  }
-  if(own.includes('plane')){
-    box(vehG,4,.5,1.2,0xf0f0f0,90,.5,-26);box(vehG,1.2,.4,3.5,0xd1332b,90,.7,-26);
-    box(vehG,.3,1.2,.8,0x333,92,.9,-26);box(vehG,1.5,.15,.4,0x333,88,.9,-26);
-  }
-}
+function renderVehicles(){ /* 2D: vehicles tracked in S.vehicles only */ }
 function buyGroc(i){const g=GROC[i];if(S.cash<g[1]){toast('Not enough cash');SFX.bad();return}S.cash-=g[1];S.food=S.food||{};S.food[g[2]]=(S.food[g[2]]||0)+1;SFX.ok();store();toast(g[0]+' added to fridge');shopMenu()}
 function buy(i){const it=ITEMS[i];if(S.cash<it[1]){toast('Not enough cash');SFX.bad();return}S.cash-=it[1];it[2]();SFX.ok();store();toast(it[0]+' bought');shopMenu()}
 function shirt(c){if(!S.shirts.includes(c)){if(S.cash<SHIRT){toast('Not enough cash');SFX.bad();return}S.cash-=SHIRT;S.shirts.push(c)}S.color=c;buildPlayer();SFX.ok();store();toast('Wearing new shirt');shopMenu()}
@@ -83,20 +61,7 @@ function decoMenu(){const sp=(k,L)=>'<div>'+L.map(c=>'<span class="sw'+(S.paint[
 function buyDeco(k){if(S.cash<DECO[k][1]){toast('Not enough cash');SFX.bad();return}S.cash-=DECO[k][1];S.deco.push(k);renderDeco();SFX.ok();store();toast(DECO[k][0]+' placed in your home');decoMenu()}
 function sellDeco(k){S.deco=S.deco.filter(x=>x!==k);S.cash+=DECO[k][1]/2;renderDeco();SFX.tap();store();decoMenu()}
 function paint(k,c){if(S.paint[k]===c)return;if(S.cash<15){toast('Not enough cash');SFX.bad();return}S.cash-=15;S.paint[k]=c;renderDeco();SFX.ok();store();decoMenu()}
-let decoG=null;
-function renderDeco(){if(decoG)INN.remove(decoG);decoG=new THREE.Group();INN.add(decoG);const D=S.deco||[],L=c=>new THREE.MeshLambertMaterial({color:c});
-  if(S.paint){HFL.material.color.set(S.paint.floor);HW.forEach(w=>w.material.color.set(S.paint.wall))}
-  if(D.includes('rug'))box(decoG,4,.04,3,0x4a6fa5,0,.07,.4);
-  if(D.includes('plant')){cyl(decoG,.3,.25,.5,0x9c5a2a,-4.4,.25,-1.5);const l=new THREE.Mesh(new THREE.SphereGeometry(.5,8,6),L(0x2f8f3e));l.position.set(-4.4,.9,-1.5);decoG.add(l)}
-  if(D.includes('lamp')){cyl(decoG,.05,.05,1.8,0x333333,4.4,.9,3.2);const sh=new THREE.Mesh(new THREE.CylinderGeometry(.35,.4,.3,8),L(0xfff3c4));sh.position.set(4.4,1.9,3.2);decoG.add(sh)}
-  if(D.includes('poster'))box(decoG,1.6,1.2,.05,0x1d7874,-4.7,2.2,-2.5);
-  if(D.includes('armchair')){box(decoG,1.2,.5,1.2,0x8b4513,3.5,.3,2.5);box(decoG,1.2,.8,.3,0x8b4513,3.5,.9,3.1)}
-  if(D.includes('bookshelf')){box(decoG,1.4,2.2,.4,0x5c3a21,-4.5,1.1,1.5);box(decoG,1.2,.05,.35,0x8b5a2b,-4.5,.6,1.5);box(decoG,1.2,.05,.35,0x8b5a2b,-4.5,1.2,1.5);box(decoG,1.2,.05,.35,0x8b5a2b,-4.5,1.8,1.5)}
-  if(D.includes('fishtank')){box(decoG,1.2,.8,.5,0x88ccee,4.2,.5,-1.5);box(decoG,1.1,.05,.4,0x2266aa,4.2,.15,-1.5)}
-  if(D.includes('wallart'))box(decoG,1.4,1,.05,0xc9a46c,4.7,2.2,-3);
-  if(D.includes('speaker')){box(decoG,.4,.6,.3,0x222222,-4.5,.4,3.5);box(decoG,.3,.3,.2,0x444444,-4.5,.9,3.5)}
-  if(D.includes('mirror'))box(decoG,.8,1.2,.05,0xaaccff,4.7,2.2,1.5);
-}
+function renderDeco(){ /* 2D: deco is UI/comfort only for now */ }
 const WORK_JOBS=[
   {id:'shop',name:'Shop assistant',pay:6,mins:12,energy:22,hours:[16,19],mind:12,desc:'Stack shelves. Needs Mind 12 (study to level up).'},
   {id:'deliver',name:'Food delivery',pay:8,mins:14,energy:28,hours:[17,20],fit:18,desc:'Bike deliveries. Needs Fitness 18 (workout).'},
