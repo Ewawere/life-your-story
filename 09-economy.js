@@ -39,22 +39,23 @@ function renderDeco(){if(decoG)INN.remove(decoG);decoG=new THREE.Group();INN.add
   if(D.includes('speaker')){box(decoG,.4,.6,.3,0x222222,-4.5,.4,3.5);box(decoG,.3,.3,.2,0x444444,-4.5,.9,3.5)}
   if(D.includes('mirror'))box(decoG,.8,1.2,.05,0xaaccff,4.7,2.2,1.5);
 }
-// ===== Player work jobs, chores, betting (phone) =====
+// ===== Player work jobs + chores (harder economy) =====
 const WORK_JOBS=[
-  {id:'shop',name:'Shop assistant',pay:12,mins:8,energy:12,hours:[15,20],desc:'Stack shelves at Singh\'s.'},
-  {id:'deliver',name:'Food delivery',pay:15,mins:10,energy:18,hours:[16,21],desc:'Deliver meals around town.'},
-  {id:'tutor',name:'Tutor a neighbour kid',pay:18,mins:12,energy:10,hours:[16,19],needFriend:30,desc:'Help with homework. Need a friend.'},
-  {id:'carwash',name:'Car wash',pay:10,mins:6,energy:14,hours:[10,18],desc:'Wash cars near the bus stop.'}
+  {id:'shop',name:'Shop assistant',pay:6,mins:12,energy:22,hours:[16,19],desc:'Stack shelves at Singh\'s. Tiring shift.'},
+  {id:'deliver',name:'Food delivery',pay:8,mins:14,energy:28,hours:[17,20],desc:'Deliver meals on a bike. Exhausting.'},
+  {id:'tutor',name:'Tutor a neighbour kid',pay:10,mins:15,energy:16,hours:[17,19],needFriend:40,desc:'Homework help. Need a good friend (40+).'},
+  {id:'carwash',name:'Car wash',pay:5,mins:10,energy:24,hours:[11,15],desc:'Wash cars near the bus stop. Hard work.'}
 ];
 function jobsMenu(){
   const h=hr();
   S.jobDay=S.jobDay||{};
-  let html='<h3>Jobs</h3><p class="m">Cash '+gbp(S.cash)+' · Energy '+Math.round(S.energy)+'</p>';
+  let html='<h3>Jobs</h3><p class="m">Cash '+gbp(S.cash)+' · Energy '+Math.round(S.energy)+'<br>One paid job per day.</p>';
   WORK_JOBS.forEach((j,i)=>{
-    const done=S.jobDay[j.id]===day();
+    const done=S.jobDay[j.id]===day()||S.jobDay._any===day();
     const open=h>=j.hours[0]&&h<j.hours[1];
     let lock='';
-    if(done)lock=' (done today)';
+    if(S.jobDay._any===day())lock=' (already worked today)';
+    else if(done)lock=' (done today)';
     else if(!open)lock=' (open '+j.hours[0]+':00–'+j.hours[1]+':00)';
     else if(j.needFriend&&!NP.some(n=>rel(n.id).f>=j.needFriend))lock=' (need a friend first)';
     const ok=!done&&open&&!(j.needFriend&&!NP.some(n=>rel(n.id).f>=j.needFriend));
@@ -66,31 +67,34 @@ function jobsMenu(){
 function startJob(i){
   const j=WORK_JOBS[i];const h=hr();
   S.jobDay=S.jobDay||{};
+  if(S.jobDay._any===day()){toast('You already worked today. Rest up.');SFX.bad();return}
   if(S.jobDay[j.id]===day()){toast('Already did that today');SFX.bad();return}
   if(h<j.hours[0]||h>=j.hours[1]){toast('Not available now');SFX.bad();return}
   if(j.needFriend&&!NP.some(n=>rel(n.id).f>=j.needFriend)){toast('Need a friend first');SFX.bad();return}
-  if(S.energy<j.energy){toast('Too tired');SFX.bad();return}
+  if(S.energy<j.energy){toast('Too tired — need more energy');SFX.bad();return}
   if(typeof ACT!=='undefined'&&ACT){toast('You are already busy');return}
   closeM();
   ACT={icon:'£',label:j.name,endMs:performance.now()+j.mins*1000,done:()=>{
-    S.cash+=j.pay;S.energy=Math.max(0,S.energy-j.energy);S.t+=j.mins*2;S.jobDay[j.id]=day();
-    gain('social',j.id==='tutor'?6:2);
-    toast(j.name+': earned '+gbp(j.pay));SFX.chime();store();
+    S.cash+=j.pay;S.energy=Math.max(0,S.energy-j.energy);S.t+=j.mins*3;S.jobDay[j.id]=day();S.jobDay._any=day();
+    gain('social',j.id==='tutor'?4:1);gain('fun',-5);
+    toast(j.name+': earned '+gbp(j.pay)+' (tired)');SFX.chime();store();
   }};
   toast('Working: '+j.name+'...');updateActUI();
 }
 function choresMenu(){
   if(typeof ACT!=='undefined'&&ACT){toast('You are already busy');return}
   S.choreDay=S.choreDay||{};
-  const list=[{id:'dishes',name:'Wash the dishes',pay:3,s:4,energy:4},{id:'trash',name:'Take out the bins',pay:2,s:3,energy:5},{id:'vacuum',name:'Vacuum the lounge',pay:4,s:5,energy:8},{id:'laundry',name:'Do the laundry',pay:5,s:6,energy:7}];
-  let html='<h3>Chores</h3><p class="m">Mum pays a little for help around the house.</p>';
+  const list=[{id:'dishes',name:'Wash the dishes',pay:1,s:6,energy:8},{id:'trash',name:'Take out the bins',pay:1,s:5,energy:10},{id:'vacuum',name:'Vacuum the lounge',pay:2,s:8,energy:12},{id:'laundry',name:'Do the laundry',pay:2,s:9,energy:14}];
+  let html='<h3>Chores</h3><p class="m">Mum pays a little. Max 2 chores per day.</p>';
   list.forEach((c,i)=>{const done=S.choreDay[c.id]===day();html+='<button class="o" onclick="doChore('+i+')" '+(done?'style="opacity:.45"':'')+'>'+c.name+' · '+gbp(c.pay)+(done?' (done)':'')+'</button>'});
   html+='<button class="o" onclick="closeM()">Close</button>';
   modal(html,true);
 }
 function doChore(i){
-  const list=[{id:'dishes',name:'Wash the dishes',pay:3,s:4,energy:4},{id:'trash',name:'Take out the bins',pay:2,s:3,energy:5},{id:'vacuum',name:'Vacuum the lounge',pay:4,s:5,energy:8},{id:'laundry',name:'Do the laundry',pay:5,s:6,energy:7}];
+  const list=[{id:'dishes',name:'Wash the dishes',pay:1,s:6,energy:8},{id:'trash',name:'Take out the bins',pay:1,s:5,energy:10},{id:'vacuum',name:'Vacuum the lounge',pay:2,s:8,energy:12},{id:'laundry',name:'Do the laundry',pay:2,s:9,energy:14}];
   const c=list[i];S.choreDay=S.choreDay||{};
+  const count=Object.keys(S.choreDay).filter(k=>k[0]!=='_'&&S.choreDay[k]===day()).length;
+  if(count>=2){toast('Mum: That is enough chores for today.');SFX.bad();return}
   if(S.choreDay[c.id]===day()){toast('Already done today');SFX.bad();return}
   if(S.energy<c.energy){toast('Too tired');SFX.bad();return}
   if(typeof ACT!=='undefined'&&ACT){toast('You are already busy');return}
@@ -100,52 +104,4 @@ function doChore(i){
     toast(c.name+' done. Mum gave you '+gbp(c.pay));SFX.ok();store();
   }};
   toast(c.name+'...');updateActUI();
-}
-function betMenu(){
-  modal('<h3>Betting</h3><p class="m">Cash '+gbp(S.cash)+'. For fun — the house has a small edge.</p>'+
-    '<button class="o" onclick="betCoinMenu()">Coin flip (x1.9)</button>'+
-    '<button class="o" onclick="betNumMenu()">Pick a number 1–5 (x4)</button>'+
-    '<button class="o" onclick="betMatchMenu()">Street match bet (x2.2)</button>'+
-    '<button class="o" onclick="phone()">Back</button>',true);
-}
-function betCoinMenu(){
-  modal('<h3>Coin flip</h3><p class="m">Stake:</p>'+
-    [2,5,10,20].map(a=>'<button class="o" onclick="betCoin('+a+',1)">Heads · '+gbp(a)+'</button><button class="o" onclick="betCoin('+a+',0)">Tails · '+gbp(a)+'</button>').join('')+
-    '<button class="o" onclick="betMenu()">Back</button>',true);
-}
-function betCoin(amt,pick){
-  if(S.cash<amt){toast('Not enough cash');SFX.bad();return}
-  S.cash-=amt;
-  const flip=Math.random()<0.5?1:0;
-  if(flip===pick){const winAmt=Math.round(amt*1.9*100)/100;S.cash+=winAmt;toast('It was '+(flip?'Heads':'Tails')+'! You win '+gbp(winAmt));SFX.chime()}
-  else{toast('It was '+(flip?'Heads':'Tails')+'. You lost '+gbp(amt));SFX.bad()}
-  S.t+=1;store();betCoinMenu();
-}
-function betNumMenu(){
-  modal('<h3>Pick 1–5</h3><p class="m">Win pays x4. Stake '+gbp(5)+'.</p>'+
-    [1,2,3,4,5].map(n=>'<button class="o" onclick="betNum('+n+')">'+n+'</button>').join('')+
-    '<button class="o" onclick="betMenu()">Back</button>',true);
-}
-function betNum(n){
-  const amt=5;if(S.cash<amt){toast('Not enough cash');SFX.bad();return}
-  S.cash-=amt;const r=1+Math.floor(Math.random()*5);
-  if(r===n){S.cash+=20;toast('It was '+r+'! You win '+gbp(20));SFX.chime()}
-  else{toast('It was '+r+'. Lost '+gbp(amt));SFX.bad()}
-  S.t+=1;store();betNumMenu();
-}
-function betMatchMenu(){
-  modal('<h3>Street match</h3><p class="m">Maple FC vs Riverside. Stake '+gbp(8)+'. Win pays x2.2</p>'+
-    '<button class="o" onclick="betMatch(0)">Maple FC win</button>'+
-    '<button class="o" onclick="betMatch(1)">Draw</button>'+
-    '<button class="o" onclick="betMatch(2)">Riverside win</button>'+
-    '<button class="o" onclick="betMenu()">Back</button>',true);
-}
-function betMatch(pick){
-  const amt=8;if(S.cash<amt){toast('Not enough cash');SFX.bad();return}
-  S.cash-=amt;
-  const roll=Math.random();const res=roll<0.4?0:roll<0.65?1:2;
-  const names=['Maple FC win','Draw','Riverside win'];
-  if(res===pick){const w=Math.round(amt*2.2*100)/100;S.cash+=w;toast(names[res]+'! You win '+gbp(w));SFX.chime()}
-  else{toast('Result: '+names[res]+'. Lost '+gbp(amt));SFX.bad()}
-  S.t+=2;store();betMatchMenu();
 }
