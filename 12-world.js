@@ -5,7 +5,6 @@ function resize(){W=innerWidth;H=innerHeight;cnv.width=W*devicePixelRatio;cnv.he
 addEventListener('resize',resize);resize();
 
 const R={setSize(){},render(){}}, sc={}, cam={position:{x:0,y:0,z:0},lookAt(){},aspect:1,updateProjectionMatrix(){}};
-let yaw=0;
 
 const outRects=[], inRects=[], acts=[], movers=[];
 const OUT={visible:true}, INN={visible:false}, INN2={visible:false};
@@ -236,7 +235,7 @@ function drawIndoor(){
     ctx.font='28px system-ui';ctx.textAlign='center';
     ctx.fillText(icon,p.x,p.y);
   });
-  if(S.vis){
+  if(S&&S.vis){
     const n=NP.find(x=>x.id===S.vis);
     if(n){
       const p=w2s(0,-1.5);
@@ -246,7 +245,7 @@ function drawIndoor(){
 }
 
 function drawWorld(){
-  const rn=typeof raining==='function'&&raining();
+  const rn=S&&typeof raining==='function'&&raining();
   ctx.fillStyle=rn?'#5a7a8a':(S&&S.inside?'#cfe3ee':'#87c96e');
   ctx.fillRect(0,0,W,H);
 
