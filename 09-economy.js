@@ -1,34 +1,39 @@
 /* ===== shop, home decoration and wardrobe (economy.js) ===== */
-const GROC=[['Eggs',2,'eggs'],['Bread',1.5,'bread'],['Rice',2.5,'rice'],['Vegetables',2,'veg'],['Chicken',4,'chicken'],['Pasta',2,'pasta'],['Milk',1.5,'milk'],['Fruit',2,'fruit']];
-const ITEMS=[['Snack',1.5,()=>{gain('hunger',15);gain('fun',10);S.t+=5}],['Cold drink',2,()=>{gain('fun',15);gain('hunger',5)}]],SHIRT=15;
+const GROC=[['Eggs',2,'eggs','🥚'],['Bread',1.5,'bread','🍞'],['Rice',2.5,'rice','🍚'],['Vegetables',2,'veg','🥦'],['Chicken',4,'chicken','🍗'],['Pasta',2,'pasta','🍝'],['Milk',1.5,'milk','🥛'],['Fruit',2,'fruit','🍎']];
+const ITEMS=[['Snack',1.5,()=>{gain('hunger',15);gain('fun',10);S.t+=5},'🍪'],['Cold drink',2,()=>{gain('fun',15);gain('hunger',5)},'🥤']],SHIRT=15;
+const VEHICLES=[
+  {id:'bike',name:'Bicycle',price:40,desc:'Parked by your door.',img:'🚲'},
+  {id:'car',name:'Used car',price:220,desc:'On the street outside home.',img:'🚗'},
+  {id:'plane',name:'Light plane',price:900,desc:'On the riverside field.',img:'✈️'}
+];
+function picBox(inner,bg){return '<div style="width:72px;height:72px;border-radius:14px;background:'+(bg||'#0e2230')+';display:flex;align-items:center;justify-content:center;font-size:40px;flex:none;border:1px solid #ffffff22">'+inner+'</div>'}
+function shirtPic(c){return '<div style="width:72px;height:72px;border-radius:14px;background:#0e2230;display:flex;align-items:center;justify-content:center;flex:none;border:1px solid #ffffff22"><div style="width:44px;height:36px;background:'+c+';border-radius:6px 6px 8px 8px;position:relative;box-shadow:0 2px 0 #0003"><div style="position:absolute;left:-10px;top:0;width:12px;height:16px;background:'+c+';border-radius:6px 0 0 8px"></div><div style="position:absolute;right:-10px;top:0;width:12px;height:16px;background:'+c+';border-radius:0 6px 8px 0"></div><div style="position:absolute;left:12px;top:-6px;width:20px;height:10px;background:'+c+';border-radius:8px 8px 0 0"></div></div></div>'}
 function shopMenu(){
   const h=hr();if(h<7||h>=21){modal("<h3>Singh's Corner Shop</h3><p>Open every day 07:00–21:00.</p>",true);return}
-  S.food=S.food||{};
+  S.food=S.food||{};S.shirts=S.shirts||[];S.vehicles=S.vehicles||[];
   const stock=Object.keys(S.food).filter(k=>S.food[k]>0).map(k=>k+': '+S.food[k]).join(', ')||'empty';
-  let html='<h3>Singh\'s Corner Shop</h3><p class="m">'+addr(0,15)+' · Cash: '+gbp(S.cash)+'<br>Your fridge: '+stock+'</p>';
-  html+='<p class="m"><b>Groceries</b> (cook at home)</p>';
-  GROC.forEach((g,i)=>{html+='<button class="o" onclick="buyGroc('+i+')">'+g[0]+' <span class="m">· '+gbp(g[1])+'</span></button>'});
+  let html='<h3>Singh\'s Corner Shop</h3><p class="m">'+addr(0,15)+' · Cash: '+gbp(S.cash)+'<br>Fridge: '+stock+'</p>';
+  html+='<p class="m"><b>Groceries</b></p>';
+  GROC.forEach((g,i)=>{
+    html+='<button class="o" onclick="buyGroc('+i+')" style="display:flex;align-items:center;gap:12px;text-align:left">'+picBox(g[3])+'<div><b>'+g[0]+'</b><br><span class="m">'+gbp(g[1])+' · for cooking</span></div></button>';
+  });
   html+='<p class="m"><b>Ready to eat</b></p>';
-  ITEMS.forEach((it,i)=>{html+='<button class="o" onclick="buy('+i+')">'+it[0]+' <span class="m">· '+gbp(it[1])+'</span></button>'});
-  html+='<p class="m"><b>Shirts</b> · '+gbp(SHIRT)+' — you wear it on your character</p>';
-  html+='<div style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0">';
+  ITEMS.forEach((it,i)=>{
+    html+='<button class="o" onclick="buy('+i+')" style="display:flex;align-items:center;gap:12px;text-align:left">'+picBox(it[3])+'<div><b>'+it[0]+'</b><br><span class="m">'+gbp(it[1])+'</span></div></button>';
+  });
+  html+='<p class="m"><b>Shirts</b> · '+gbp(SHIRT)+' — shown on your character</p>';
   COLORS.forEach(c=>{
     const owned=S.shirts.includes(c), on=S.color===c;
-    html+='<button onclick="shirt(\''+c+'\')" style="width:56px;height:56px;border-radius:12px;border:3px solid '+(on?'#fff':owned?'#5fd08a':'#ffffff33')+';background:'+c+';cursor:pointer" title="'+(on?'Wearing':owned?'Wear':'Buy')+'"></button>';
+    const label=on?'Wearing now':owned?'Wear this':('Buy · '+gbp(SHIRT));
+    html+='<button class="o" onclick="shirt(\''+c+'\')" style="display:flex;align-items:center;gap:12px;text-align:left;border-color:'+(on?'#fff':owned?'#5fd08a':'#ffffff2a')+'">'+shirtPic(c)+'<div><b>T-shirt</b><br><span class="m">'+label+'</span></div></button>';
   });
-  html+='</div><p class="m">Tap a colour. Green border = owned; white = wearing.</p>';
-  html+='<p class="m"><b>Vehicles</b> — parked outside your home when owned</p>';
+  html+='<p class="m"><b>Vehicles</b> — appear outside when owned</p>';
   VEHICLES.forEach((v,i)=>{
-    const owned=(S.vehicles||[]).includes(v.id);
-    html+='<button class="o" onclick="buyVehicle('+i+')"><b>'+v.name+'</b> · '+(owned?'Owned — see it outside':gbp(v.price))+'<br><span class="m">'+v.desc+'</span></button>';
+    const owned=S.vehicles.includes(v.id);
+    html+='<button class="o" onclick="buyVehicle('+i+')" style="display:flex;align-items:center;gap:12px;text-align:left">'+picBox(v.img)+'<div><b>'+v.name+'</b><br><span class="m">'+(owned?'Owned — look outside home':gbp(v.price)+' · '+v.desc)+'</span></div></button>';
   });
   modal(html,true);
 }
-const VEHICLES=[
-  {id:'bike',name:'Bicycle',price:40,desc:'Lean bike by your door.'},
-  {id:'car',name:'Used car',price:220,desc:'Small car parked on the street.'},
-  {id:'plane',name:'Light plane',price:900,desc:'Rare! Parked on the riverside field.'}
-];
 function buyVehicle(i){
   const v=VEHICLES[i];S.vehicles=S.vehicles||[];
   if(S.vehicles.includes(v.id)){toast('You already own this — look outside your home');return}
@@ -66,7 +71,15 @@ const DECO={plant:['Potted plant',12,1],rug:['Rug',30,1],lamp:['Floor lamp',20,1
 const WALLS=['#f3ead7','#cfe3c8','#cfe3f2','#f4d6d6','#b9c6d6'],FLOORS=['#d8b98a','#7a5a3a','#b8bcc2'];
 const comfort=()=>Math.min(6,(S.deco||[]).reduce((a,k)=>a+(DECO[k]?DECO[k][2]:1),0));
 function decoMenu(){const sp=(k,L)=>'<div>'+L.map(c=>'<span class="sw'+(S.paint[k]===c?' on':'')+'" style="background:'+c+'" onclick="paint(\''+k+'\',\''+c+'\')"></span>').join('')+'</div>';
-  modal('<h3>Decorate your home</h3><p class="m">Cash '+gbp(S.cash)+' · Comfort '+comfort()+'/6 — items appear in your house</p>'+Object.keys(DECO).map(k=>{const o=S.deco.includes(k);return '<button class="o" onclick="'+(o?'sellDeco':'buyDeco')+'(\''+k+'\')">'+DECO[k][0]+' <span class="m">· '+(o?'owned · Sell '+gbp(DECO[k][1]/2):gbp(DECO[k][1]))+'</span></button>'}).join('')+'<p class="m">Wall ('+gbp(15)+')</p>'+sp('wall',WALLS)+'<p class="m">Floor ('+gbp(15)+')</p>'+sp('floor',FLOORS),true)}
+  const I={plant:'🪴',rug:'🟫',lamp:'💡',poster:'🖼️',armchair:'🪑',bookshelf:'📚',fishtank:'🐠',wallart:'🎨',speaker:'🔊',mirror:'🪞'};
+  let html='<h3>Decorate your home</h3><p class="m">Cash '+gbp(S.cash)+' · Comfort '+comfort()+'/6 — items appear in your house</p>';
+  Object.keys(DECO).forEach(k=>{
+    const o=S.deco.includes(k), d=DECO[k];
+    html+='<button class="o" onclick="'+(o?'sellDeco':'buyDeco')+'(\''+k+'\')" style="display:flex;align-items:center;gap:12px;text-align:left">'+picBox(I[k]||'🏠')+'<div><b>'+d[0]+'</b><br><span class="m">'+(o?'Owned · Sell '+gbp(d[1]/2):gbp(d[1]))+'</span></div></button>';
+  });
+  html+='<p class="m">Wall ('+gbp(15)+')</p>'+sp('wall',WALLS)+'<p class="m">Floor ('+gbp(15)+')</p>'+sp('floor',FLOORS);
+  modal(html,true);
+}
 function buyDeco(k){if(S.cash<DECO[k][1]){toast('Not enough cash');SFX.bad();return}S.cash-=DECO[k][1];S.deco.push(k);renderDeco();SFX.ok();store();toast(DECO[k][0]+' placed in your home');decoMenu()}
 function sellDeco(k){S.deco=S.deco.filter(x=>x!==k);S.cash+=DECO[k][1]/2;renderDeco();SFX.tap();store();decoMenu()}
 function paint(k,c){if(S.paint[k]===c)return;if(S.cash<15){toast('Not enough cash');SFX.bad();return}S.cash-=15;S.paint[k]=c;renderDeco();SFX.ok();store();decoMenu()}
