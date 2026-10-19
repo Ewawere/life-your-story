@@ -8,67 +8,54 @@ sc.background=new THREE.Color(0x9ad3ff);const OUT=new THREE.Group(),INN=new THRE
 function box(g,w,h,d,c,x,y,z){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshLambertMaterial({color:c}));m.position.set(x,y,z);g.add(m);return m}
 function cyl(g,rt,rb,h,c,x,y,z,seg){const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg||8),new THREE.MeshLambertMaterial({color:c}));m.position.set(x,y,z);g.add(m);return m}
 function person(color,hair,skin,o){
-  // Anime-styled proportions: big head, large eyes, slim body
   o=o||{};skin=skin||0x8d5a3b;hair=hair||0x1d1410;
-  const g=new THREE.Group(),L=c=>new THREE.MeshLambertMaterial({color:c}),pants=o.pants||0x2c3344;
+  const female=o.gender==='female'||o.dress;
+  const g=new THREE.Group(),L=c=>new THREE.MeshLambertMaterial({color:c}),pants=o.pants||(female?0x4a3a5c:0x2c3344);
   const sub=(x,y,z)=>{const q=new THREE.Group();q.position.set(x,y,z);g.add(q);return q};
   const sph=(q,r,c,x,y,z,seg)=>{const m=new THREE.Mesh(new THREE.SphereGeometry(r,seg||14,seg||12),L(c));m.position.set(x,y,z);q.add(m);return m};
-  // Slim legs + shoes
-  const lL=sub(-.14,.78,0),lR=sub(.14,.78,0);
-  [lL,lR].forEach(q=>{cyl(q,.09,.08,.7,pants,0,-.34,0,8);box(q,.2,.1,.34,0x1a1a1a,0,-.74,.05)});
-  // Slim torso + hips
+  const legW=female?.08:.1, hip=female?.12:.14;
+  const lL=sub(-hip,.76,0),lR=sub(hip,.76,0);
+  [lL,lR].forEach(q=>{cyl(q,legW,legW*.9,.68,pants,0,-.32,0,8);box(q,.18,.09,.32,0x1a1a1a,0,-.72,.05)});
   const torso=sub(0,0,0);
-  cyl(torso,.24,.28,.95,color,0,.98,0,12);
-  cyl(torso,.26,.26,.18,pants,0,.5,0,10);
-  // Neck
-  cyl(torso,.07,.08,.14,skin,0,1.55,0,8);
-  if(o.dress)cyl(torso,.28,.42,.7,color,0,.55,0,12);
-  // Slim arms
-  const aL=sub(-.38,1.4,0),aR=sub(.38,1.4,0);
-  [aL,aR].forEach(q=>{cyl(q,.07,.06,.6,color,0,-.3,0,8);sph(q,.075,skin,0,-.64,0,10)});
-  // Big anime head
-  const head=sub(0,1.86,0);
-  sph(head,.4,skin,0,0,0,16);
-  // Small ears
-  [-.38,.38].forEach(x=>sph(head,.06,skin,x,0,0,8));
-  // Large eyes with white, iris, pupil, shine
-  [-.13,.13].forEach(x=>{
-    sph(head,.09,0xffffff,x,.04,.34,12);
-    sph(head,.055,0x3d5a80,x,.04,.38,10);
-    sph(head,.028,0x111122,x,.04,.41,8);
-    sph(head,.02,0xffffff,x+.02,.07,.42,6);
+  const tw=female?.22:.26, tb=female?.24:.28;
+  cyl(torso,tw,tb,.9,color,0,.98,0,12);
+  cyl(torso,tb,tb,.16,pants,0,.52,0,10);
+  cyl(torso,.065,.07,.12,skin,0,1.52,0,8);
+  if(female||o.dress)cyl(torso,.24,.4,.72,color,0,.52,0,12);
+  const armX=female?.34:.4;
+  const aL=sub(-armX,1.38,0),aR=sub(armX,1.38,0);
+  [aL,aR].forEach(q=>{cyl(q,.065,.055,.58,color,0,-.28,0,8);sph(q,.07,skin,0,-.6,0,10)});
+  const head=sub(0,1.82,0);
+  sph(head,.42,skin,0,0,0,16);
+  [-.4,.4].forEach(x=>sph(head,.055,skin,x,0,0,8));
+  const ey=female?.05:.04;
+  [-.14,.14].forEach(x=>{
+    sph(head,.1,0xffffff,x,ey,.36,12);
+    sph(head,.06,0x3d5a80,x,ey,.4,10);
+    sph(head,.03,0x111122,x,ey,.43,8);
+    sph(head,.022,0xffffff,x+.025,.08,.44,6);
   });
-  // Thin brows
-  [-.13,.13].forEach(x=>box(head,.12,.015,.02,hair,x,.16,.35));
-  // Tiny nose + small mouth
-  sph(head,.025,skin,0,-.02,.38,8);
-  box(head,.07,.018,.015,0xb85a5a,0,-.14,.36);
-  // Voluminous anime hair
-  const st=o.style||'short';
-  if(st!=='bald'){
-    const cap=new THREE.Mesh(new THREE.SphereGeometry(.42,16,12,0,Math.PI*2,0,Math.PI*0.55),L(st==='cap'?(o.hat||0x2255aa):hair));
-    cap.position.y=.08;head.add(cap);
-    if(st!=='cap'){
-      [[-.12,.2,.32],[.12,.2,.32],[0,.22,.34],[-.22,.12,.28],[.22,.12,.28]].forEach(([x,y,z])=>sph(head,.1,hair,x,y,z,8));
-    }
+  [-.14,.14].forEach(x=>box(head,.13,.016,.02,hair,x,.18,.36));
+  sph(head,.022,skin,0,-.02,.4,8);
+  box(head,.08,.02,.015,0xb85a5a,0,-.15,.38);
+  const st=o.style||'spiky';
+  if(st==='spiky'||st==='short'){
+    const base=new THREE.Mesh(new THREE.SphereGeometry(.44,14,10,0,Math.PI*2,0,Math.PI*0.5),L(hair));
+    base.position.y=.1;head.add(base);
+    const spikes=[[0,.55,.1],[.25,.5,.15],[-.25,.5,.15],[.4,.35,.1],[-.4,.35,.1],[.35,.2,.25],[-.35,.2,.25],[.15,.45,.3],[-.15,.45,.3],[0,.4,.35],[.5,.15,0],[-.5,.15,0]];
+    spikes.forEach(([x,y,z])=>{const s=new THREE.Mesh(new THREE.ConeGeometry(.09,.28,6),L(hair));s.position.set(x,y,z);s.lookAt(x*2,y+1.2,z*2);head.add(s)});
+    [[-.1,.22,.38],[.1,.22,.38],[0,.25,.4]].forEach(([x,y,z])=>sph(head,.09,hair,x,y,z,8));
+  } else if(st!=='bald'){
+    const base=new THREE.Mesh(new THREE.SphereGeometry(.44,14,10,0,Math.PI*2,0,Math.PI*0.55),L(st==='cap'?(o.hat||0x2255aa):hair));
+    base.position.y=.1;head.add(base);
+    [[-.12,.22,.34],[.12,.22,.34],[0,.24,.36]].forEach(([x,y,z])=>sph(head,.1,hair,x,y,z,8));
   }
-  if(st==='long'){
-    box(head,.85,1.0,.28,hair,0,-.35,-.2);
-    [[-.32,-.2],[.32,-.2],[-.2,-.5],[.2,-.5]].forEach(([x,y])=>sph(head,.16,hair,x,y,-.1,8));
-  }
-  if(st==='bun'){
-    sph(head,.18,hair,0,.48,-.05,12);
-    sph(head,.12,hair,0,.58,-.05,10);
-  }
-  if(st==='curly'){
-    [[-.22,.22],[.22,.22],[0,.32],[-.3,.08],[.3,.08],[0,.15],[-.18,.3],[.18,.3],[-.25,.18],[.25,.18]].forEach(([x,y])=>sph(head,.15,hair,x,y+.05,0,8));
-  }
-  if(st==='cap'){
-    box(head,.48,.05,.32,o.hat||0x2255aa,0,.14,.3);
-    cyl(head,.24,.24,.14,o.hat||0x2255aa,0,.2,0,12);
-  }
-  if(o.glasses)[-.13,.13].forEach(x=>{const t=new THREE.Mesh(new THREE.TorusGeometry(.1,.014,6,16),L(0x222222));t.position.set(x,.04,.36);head.add(t)});
-  const sh=new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,.02,14),new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:.2}));
+  if(st==='long'){box(head,.9,1.1,.3,hair,0,-.4,-.22);[[-.35,-.25],[.35,-.25],[-.22,-.55],[.22,-.55]].forEach(([x,y])=>sph(head,.17,hair,x,y,-.12,8))}
+  if(st==='bun'){sph(head,.2,hair,0,.52,-.05,12);sph(head,.13,hair,0,.62,-.05,10)}
+  if(st==='curly')[[-.24,.24],[.24,.24],[0,.34],[-.32,.1],[.32,.1],[0,.16],[-.2,.32],[.2,.32]].forEach(([x,y])=>sph(head,.16,hair,x,y+.06,0,8));
+  if(st==='cap'){box(head,.5,.05,.34,o.hat||0x2255aa,0,.16,.32);cyl(head,.25,.25,.14,o.hat||0x2255aa,0,.22,0,12)}
+  if(o.glasses)[-.14,.14].forEach(x=>{const t=new THREE.Mesh(new THREE.TorusGeometry(.11,.014,6,16),L(0x222222));t.position.set(x,.05,.38);head.add(t)});
+  const sh=new THREE.Mesh(new THREE.CylinderGeometry(.4,.4,.02,14),new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:.2}));
   sh.position.y=.02;g.add(sh);
   g.userData={lL,lR,aL,aR,torso,head};
   return g;
@@ -110,9 +97,9 @@ inRects.push([0,-4.4,1.4,.6],[4.3,-.1,.8,.9],[-3,-4,2.6,1.2],[3,-3.5,1.8,3.0],[4
 const INN2=new THREE.Group(),hostG=new THREE.Group();sc.add(INN2);INN2.add(hostG);INN2.visible=false;
 box(INN2,10,.1,10,0xc9a46c,0,-.05,0);box(INN2,10,4,.2,0xdcefe8,0,2,-5);box(INN2,.2,4,10,0xdcefe8,-5,2,0);box(INN2,.2,4,10,0xdcefe8,5,2,0);box(INN2,1.8,.04,1.2,0xb5523b,0,.07,4.2);
 box(INN2,3,2.2,.8,0x7a4a2a,-3,1.1,-4.3);box(INN2,2.4,.9,1.6,0x9c6b3f,3,.45,-3.5);box(INN2,1.2,1,1.2,0x333344,4,.5,2);box(INN2,1,.7,.1,0x111111,4,1.35,2);box(INN2,3,.8,1.2,0x2a7f62,-3.5,.4,1.5);
-function buildHost(n){while(hostG.children.length)hostG.remove(hostG.children[0]);hostG.add(person(n.color,n.hair,n.skin,n.o));hostG.position.set(0,0,-1.8)}
+function buildHost(n){while(hostG.children.length)hostG.remove(hostG.children[0]);hostG.add(person(n.color,n.hair,n.skin,Object.assign({},n.o||{},{gender:n.gender||(n.o&&n.o.dress?'female':'male')})));hostG.position.set(0,0,-1.8)}
 const P=new THREE.Group();sc.add(P);let pBody=null;
-function buildPlayer(){while(P.children.length)P.remove(P.children[0]);P.add(person(new THREE.Color(S.color),S.hair,S.skin,{style:S.style||'short'}))}
+function buildPlayer(){while(P.children.length)P.remove(P.children[0]);P.add(person(new THREE.Color(S.color),S.hair,S.skin,{style:S.style||'spiky',gender:S.gender||'male',dress:(S.gender==='female'&&(S.style==='long'||S.style==='bun'))}))}
 function setScene(inside,vis){SFX.door();S.inside=inside;S.vis=vis||null;const hn=S.vis&&NP.find(x=>x.id===S.vis);if(S.vis&&!hn)S.vis=null;OUT.visible=!inside;INN.visible=inside&&!S.vis;INN2.visible=inside&&!!S.vis;if(S.vis)buildHost(hn);
   if(inside)sc.background=new THREE.Color(0xcfe3ee)}
 function enterHome(){setScene(true);P.position.set(0,0,2.2);toast('Inside your home');store()}
