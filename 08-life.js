@@ -77,7 +77,7 @@ const MEALS=[['Burger meal',9,50,5],['Pizza',12,60,10],['Salad bowl',8,40,0]];
 function pFood(){modal('<h3>Food delivery</h3><p class="m">Arrives in about 30 minutes. Balance '+gbp(S.cash)+'</p>'+MEALS.map((m,i)=>'<button class="o" onclick="order('+i+')">'+m[0]+' <span class="m">· '+gbp(m[1])+'</span></button>').join('')+'<button class="o" onclick="phone()">Back</button>',true)}
 function order(i){const m=MEALS[i];if(S.cash<m[1]){toast('Not enough cash');SFX.bad();return}S.cash-=m[1];gain('hunger',m[2]);gain('fun',m[3]);S.t+=30;SFX.ok();store();toast(m[0]+' delivered. Hunger +'+m[2]);pFood()}
 function busMenu(){modal('<h3>Bus stop</h3><p class="m">You are in '+areaOf(P.position.x).n+'. Single fare '+gbp(2)+', about 20 minutes.</p>'+DIST.map((d,i)=>d.n===areaOf(P.position.x).n?'':'<button class="o" onclick="ride('+i+')">Take the bus to '+d.n+'</button>').join(''),true)}
-function ride(i){if(S.cash<2){toast('You need £2 for the fare');SFX.bad();return}S.cash-=2;S.t+=20;const d=DIST[i];P.position.set(d.ox+6,0,-.6);S.area=d.n;closeM();toast('Arrived in '+d.n);SFX.door();store()}
+function ride(i){if(S.cash<2){toast('You need £2 for the fare');SFX.bad();return}S.cash-=2;S.t+=20;const d=DIST[i];P.position.x=d.ox+6;P.position.z=-.6;S.area=d.n;closeM();toast('Arrived in '+d.n);SFX.door();store()}
 let ACT=null;
 const SHOWS=[['Soap Opera',25,5,'A dramatic episode keeps you hooked.'],['Comedy Show',35,6,'You laugh until your sides hurt.'],['Nature Doc',30,7,'Beautiful animals and calm narration.'],['Football Match',40,8,'Your team scores in the final minute!'],['News Bulletin',15,4,'You catch up on what is happening.']];
 function tvMenu(){
