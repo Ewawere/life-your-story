@@ -8,34 +8,67 @@ sc.background=new THREE.Color(0x9ad3ff);const OUT=new THREE.Group(),INN=new THRE
 function box(g,w,h,d,c,x,y,z){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshLambertMaterial({color:c}));m.position.set(x,y,z);g.add(m);return m}
 function cyl(g,rt,rb,h,c,x,y,z,seg){const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg||8),new THREE.MeshLambertMaterial({color:c}));m.position.set(x,y,z);g.add(m);return m}
 function person(color,hair,skin,o){
+  // Anime-styled proportions: big head, large eyes, slim body
   o=o||{};skin=skin||0x8d5a3b;hair=hair||0x1d1410;
   const g=new THREE.Group(),L=c=>new THREE.MeshLambertMaterial({color:c}),pants=o.pants||0x2c3344;
   const sub=(x,y,z)=>{const q=new THREE.Group();q.position.set(x,y,z);g.add(q);return q};
-  const sph=(q,r,c,x,y,z,seg)=>{const m=new THREE.Mesh(new THREE.SphereGeometry(r,seg||12,seg||10),L(c));m.position.set(x,y,z);q.add(m);return m};
-  const lL=sub(-.18,.82,0),lR=sub(.18,.82,0);
-  [lL,lR].forEach(q=>{cyl(q,.12,.11,.78,pants,0,-.38,0,8);box(q,.26,.12,.42,0x1a1a1a,0,-.82,.06)});
+  const sph=(q,r,c,x,y,z,seg)=>{const m=new THREE.Mesh(new THREE.SphereGeometry(r,seg||14,seg||12),L(c));m.position.set(x,y,z);q.add(m);return m};
+  // Slim legs + shoes
+  const lL=sub(-.14,.78,0),lR=sub(.14,.78,0);
+  [lL,lR].forEach(q=>{cyl(q,.09,.08,.7,pants,0,-.34,0,8);box(q,.2,.1,.34,0x1a1a1a,0,-.74,.05)});
+  // Slim torso + hips
   const torso=sub(0,0,0);
-  cyl(torso,.32,.38,1.05,color,0,1.0,0,10);
-  cyl(torso,.34,.34,.22,pants,0,.48,0,10);
-  cyl(torso,.09,.1,.18,skin,0,1.62,0,8);
-  if(o.dress)cyl(torso,.36,.55,.75,color,0,.55,0,12);
-  const aL=sub(-.48,1.48,0),aR=sub(.48,1.48,0);
-  [aL,aR].forEach(q=>{cyl(q,.09,.08,.66,color,0,-.32,0,8);sph(q,.09,skin,0,-.7,0,10)});
-  const head=sub(0,1.88,0);
-  sph(head,.32,skin,0,0,0,14);
-  [-.31,.31].forEach(x=>sph(head,.07,skin,x,0,0,8));
-  [-.1,.1].forEach(x=>{sph(head,.045,0xffffff,x,.03,.28,8);sph(head,.025,0x1a1a2e,x,.03,.31,8)});
-  [-.1,.1].forEach(x=>box(head,.1,.02,.02,hair,x,.12,.29));
-  sph(head,.035,skin,0,-.02,.31,8);
-  box(head,.09,.025,.02,0x8a3a3a,0,-.12,.29);
+  cyl(torso,.24,.28,.95,color,0,.98,0,12);
+  cyl(torso,.26,.26,.18,pants,0,.5,0,10);
+  // Neck
+  cyl(torso,.07,.08,.14,skin,0,1.55,0,8);
+  if(o.dress)cyl(torso,.28,.42,.7,color,0,.55,0,12);
+  // Slim arms
+  const aL=sub(-.38,1.4,0),aR=sub(.38,1.4,0);
+  [aL,aR].forEach(q=>{cyl(q,.07,.06,.6,color,0,-.3,0,8);sph(q,.075,skin,0,-.64,0,10)});
+  // Big anime head
+  const head=sub(0,1.86,0);
+  sph(head,.4,skin,0,0,0,16);
+  // Small ears
+  [-.38,.38].forEach(x=>sph(head,.06,skin,x,0,0,8));
+  // Large eyes with white, iris, pupil, shine
+  [-.13,.13].forEach(x=>{
+    sph(head,.09,0xffffff,x,.04,.34,12);
+    sph(head,.055,0x3d5a80,x,.04,.38,10);
+    sph(head,.028,0x111122,x,.04,.41,8);
+    sph(head,.02,0xffffff,x+.02,.07,.42,6);
+  });
+  // Thin brows
+  [-.13,.13].forEach(x=>box(head,.12,.015,.02,hair,x,.16,.35));
+  // Tiny nose + small mouth
+  sph(head,.025,skin,0,-.02,.38,8);
+  box(head,.07,.018,.015,0xb85a5a,0,-.14,.36);
+  // Voluminous anime hair
   const st=o.style||'short';
-  if(st!=='bald'){const m=new THREE.Mesh(new THREE.SphereGeometry(.34,14,10,0,Math.PI*2,0,Math.PI/2),L(st==='cap'?(o.hat||0x2255aa):hair));m.position.y=.06;head.add(m)}
-  if(st==='long'){box(head,.7,.85,.24,hair,0,-.28,-.18);box(head,.2,.5,.15,hair,-.28,-.15,.05);box(head,.2,.5,.15,hair,.28,-.15,.05)}
-  if(st==='bun'){sph(head,.16,hair,0,.4,-.02,10);sph(head,.12,hair,0,.48,-.02,8)}
-  if(st==='curly')[[-.2,.2],[.2,.2],[0,.3],[-.28,.05],[.28,.05],[0,.12],[-.15,.28],[.15,.28]].forEach(([x,y])=>sph(head,.14,hair,x,y+.04,-.02,8));
-  if(st==='cap'){box(head,.42,.04,.28,o.hat||0x2255aa,0,.12,.28);cyl(head,.22,.22,.12,o.hat||0x2255aa,0,.18,0,10)}
-  if(o.glasses)[-.1,.1].forEach(x=>{const t=new THREE.Mesh(new THREE.TorusGeometry(.07,.012,6,14),L(0x222222));t.position.set(x,.03,.3);head.add(t)});
-  const sh=new THREE.Mesh(new THREE.CylinderGeometry(.48,.48,.02,14),new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:.22}));
+  if(st!=='bald'){
+    const cap=new THREE.Mesh(new THREE.SphereGeometry(.42,16,12,0,Math.PI*2,0,Math.PI*0.55),L(st==='cap'?(o.hat||0x2255aa):hair));
+    cap.position.y=.08;head.add(cap);
+    if(st!=='cap'){
+      [[-.12,.2,.32],[.12,.2,.32],[0,.22,.34],[-.22,.12,.28],[.22,.12,.28]].forEach(([x,y,z])=>sph(head,.1,hair,x,y,z,8));
+    }
+  }
+  if(st==='long'){
+    box(head,.85,1.0,.28,hair,0,-.35,-.2);
+    [[-.32,-.2],[.32,-.2],[-.2,-.5],[.2,-.5]].forEach(([x,y])=>sph(head,.16,hair,x,y,-.1,8));
+  }
+  if(st==='bun'){
+    sph(head,.18,hair,0,.48,-.05,12);
+    sph(head,.12,hair,0,.58,-.05,10);
+  }
+  if(st==='curly'){
+    [[-.22,.22],[.22,.22],[0,.32],[-.3,.08],[.3,.08],[0,.15],[-.18,.3],[.18,.3],[-.25,.18],[.25,.18]].forEach(([x,y])=>sph(head,.15,hair,x,y+.05,0,8));
+  }
+  if(st==='cap'){
+    box(head,.48,.05,.32,o.hat||0x2255aa,0,.14,.3);
+    cyl(head,.24,.24,.14,o.hat||0x2255aa,0,.2,0,12);
+  }
+  if(o.glasses)[-.13,.13].forEach(x=>{const t=new THREE.Mesh(new THREE.TorusGeometry(.1,.014,6,16),L(0x222222));t.position.set(x,.04,.36);head.add(t)});
+  const sh=new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,.02,14),new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:.2}));
   sh.position.y=.02;g.add(sh);
   g.userData={lL,lR,aL,aR,torso,head};
   return g;
