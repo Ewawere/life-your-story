@@ -10,19 +10,64 @@ function shopMenu(){
   GROC.forEach((g,i)=>{html+='<button class="o" onclick="buyGroc('+i+')">'+g[0]+' <span class="m">· '+gbp(g[1])+'</span></button>'});
   html+='<p class="m"><b>Ready to eat</b></p>';
   ITEMS.forEach((it,i)=>{html+='<button class="o" onclick="buy('+i+')">'+it[0]+' <span class="m">· '+gbp(it[1])+'</span></button>'});
-  html+='<p class="m">Shirts: '+gbp(SHIRT)+' each</p>';
-  COLORS.forEach(c=>{html+='<button class="o" style="border-left:16px solid '+c+'" onclick="shirt(\''+c+'\')">'+(S.shirts.includes(c)?(S.color===c?'Wearing now':'Wear this'):'Buy shirt')+'</button>'});
+  html+='<p class="m"><b>Shirts</b> · '+gbp(SHIRT)+' — you wear it on your character</p>';
+  html+='<div style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0">';
+  COLORS.forEach(c=>{
+    const owned=S.shirts.includes(c), on=S.color===c;
+    html+='<button onclick="shirt(\''+c+'\')" style="width:56px;height:56px;border-radius:12px;border:3px solid '+(on?'#fff':owned?'#5fd08a':'#ffffff33')+';background:'+c+';cursor:pointer" title="'+(on?'Wearing':owned?'Wear':'Buy')+'"></button>';
+  });
+  html+='</div><p class="m">Tap a colour. Green border = owned; white = wearing.</p>';
+  html+='<p class="m"><b>Vehicles</b> — parked outside your home when owned</p>';
+  VEHICLES.forEach((v,i)=>{
+    const owned=(S.vehicles||[]).includes(v.id);
+    html+='<button class="o" onclick="buyVehicle('+i+')"><b>'+v.name+'</b> · '+(owned?'Owned — see it outside':gbp(v.price))+'<br><span class="m">'+v.desc+'</span></button>';
+  });
   modal(html,true);
+}
+const VEHICLES=[
+  {id:'bike',name:'Bicycle',price:40,desc:'Lean bike by your door.'},
+  {id:'car',name:'Used car',price:220,desc:'Small car parked on the street.'},
+  {id:'plane',name:'Light plane',price:900,desc:'Rare! Parked on the riverside field.'}
+];
+function buyVehicle(i){
+  const v=VEHICLES[i];S.vehicles=S.vehicles||[];
+  if(S.vehicles.includes(v.id)){toast('You already own this — look outside your home');return}
+  if(S.cash<v.price){toast('Not enough cash');SFX.bad();return}
+  S.cash-=v.price;S.vehicles.push(v.id);renderVehicles();SFX.chime();store();
+  toast('Bought '+v.name+'! Step outside to see it.');shopMenu();
+}
+let vehG=null;
+function renderVehicles(){
+  if(typeof OUT==='undefined')return;
+  if(vehG){OUT.remove(vehG);vehG=null}
+  vehG=new THREE.Group();OUT.add(vehG);
+  const own=S.vehicles||[];
+  if(own.includes('bike')){
+    box(vehG,.08,.08,1.1,0x222222,-2.2,.45,-3.2);box(vehG,.08,.08,1.1,0x222222,-1.5,.45,-3.2);
+    const w1=new THREE.Mesh(new THREE.TorusGeometry(.35,.04,8,16),new THREE.MeshLambertMaterial({color:0x111111}));w1.position.set(-2.2,.35,-3.2);w1.rotation.y=Math.PI/2;vehG.add(w1);
+    const w2=w1.clone();w2.position.x=-1.5;vehG.add(w2);
+    box(vehG,1.1,.08,.08,0x3a86ff,-1.85,.7,-3.2);
+  }
+  if(own.includes('car')){
+    box(vehG,3.2,.7,1.6,0x2a6f97,-6,.55,1.2);box(vehG,1.8,.55,1.5,0x1a4a66,-5.6,1.15,1.2);
+    [[-7,-.2],[-7,.2],[-5,-.2],[-5,.2]].forEach(([x,z])=>{
+      const w=new THREE.Mesh(new THREE.CylinderGeometry(.28,.28,.2,10),new THREE.MeshLambertMaterial({color:0x111}));w.rotation.z=Math.PI/2;w.position.set(x,.28,1.2+z);vehG.add(w);
+    });
+  }
+  if(own.includes('plane')){
+    box(vehG,4,.5,1.2,0xf0f0f0,90,.5,-26);box(vehG,1.2,.4,3.5,0xd1332b,90,.7,-26);
+    box(vehG,.3,1.2,.8,0x333,92,.9,-26);box(vehG,1.5,.15,.4,0x333,88,.9,-26);
+  }
 }
 function buyGroc(i){const g=GROC[i];if(S.cash<g[1]){toast('Not enough cash');SFX.bad();return}S.cash-=g[1];S.food=S.food||{};S.food[g[2]]=(S.food[g[2]]||0)+1;SFX.ok();store();toast(g[0]+' added to fridge');shopMenu()}
 function buy(i){const it=ITEMS[i];if(S.cash<it[1]){toast('Not enough cash');SFX.bad();return}S.cash-=it[1];it[2]();SFX.ok();store();toast(it[0]+' bought');shopMenu()}
-function shirt(c){if(!S.shirts.includes(c)){if(S.cash<SHIRT){toast('Not enough cash');SFX.bad();return}S.cash-=SHIRT;S.shirts.push(c)}S.color=c;buildPlayer();SFX.ok();store();shopMenu()}
+function shirt(c){if(!S.shirts.includes(c)){if(S.cash<SHIRT){toast('Not enough cash');SFX.bad();return}S.cash-=SHIRT;S.shirts.push(c)}S.color=c;buildPlayer();SFX.ok();store();toast('Wearing new shirt');shopMenu()}
 const DECO={plant:['Potted plant',12,1],rug:['Rug',30,1],lamp:['Floor lamp',20,1],poster:['Wall poster',8,1],armchair:['Armchair',45,2],bookshelf:['Bookshelf',35,1],fishtank:['Fish tank',40,2],wallart:['Framed art',14,1],speaker:['Speaker',25,1],mirror:['Mirror',16,1]};
 const WALLS=['#f3ead7','#cfe3c8','#cfe3f2','#f4d6d6','#b9c6d6'],FLOORS=['#d8b98a','#7a5a3a','#b8bcc2'];
 const comfort=()=>Math.min(6,(S.deco||[]).reduce((a,k)=>a+(DECO[k]?DECO[k][2]:1),0));
 function decoMenu(){const sp=(k,L)=>'<div>'+L.map(c=>'<span class="sw'+(S.paint[k]===c?' on':'')+'" style="background:'+c+'" onclick="paint(\''+k+'\',\''+c+'\')"></span>').join('')+'</div>';
-  modal('<h3>Decorate your home</h3><p class="m">Cash '+gbp(S.cash)+' · Comfort '+comfort()+'/6</p>'+Object.keys(DECO).map(k=>{const o=S.deco.includes(k);return '<button class="o" onclick="'+(o?'sellDeco':'buyDeco')+'(\''+k+'\')">'+DECO[k][0]+' <span class="m">· '+(o?'owned · Sell '+gbp(DECO[k][1]/2):gbp(DECO[k][1]))+'</span></button>'}).join('')+'<p class="m">Wall ('+gbp(15)+')</p>'+sp('wall',WALLS)+'<p class="m">Floor ('+gbp(15)+')</p>'+sp('floor',FLOORS),true)}
-function buyDeco(k){if(S.cash<DECO[k][1]){toast('Not enough cash');SFX.bad();return}S.cash-=DECO[k][1];S.deco.push(k);renderDeco();SFX.ok();store();decoMenu()}
+  modal('<h3>Decorate your home</h3><p class="m">Cash '+gbp(S.cash)+' · Comfort '+comfort()+'/6 — items appear in your house</p>'+Object.keys(DECO).map(k=>{const o=S.deco.includes(k);return '<button class="o" onclick="'+(o?'sellDeco':'buyDeco')+'(\''+k+'\')">'+DECO[k][0]+' <span class="m">· '+(o?'owned · Sell '+gbp(DECO[k][1]/2):gbp(DECO[k][1]))+'</span></button>'}).join('')+'<p class="m">Wall ('+gbp(15)+')</p>'+sp('wall',WALLS)+'<p class="m">Floor ('+gbp(15)+')</p>'+sp('floor',FLOORS),true)}
+function buyDeco(k){if(S.cash<DECO[k][1]){toast('Not enough cash');SFX.bad();return}S.cash-=DECO[k][1];S.deco.push(k);renderDeco();SFX.ok();store();toast(DECO[k][0]+' placed in your home');decoMenu()}
 function sellDeco(k){S.deco=S.deco.filter(x=>x!==k);S.cash+=DECO[k][1]/2;renderDeco();SFX.tap();store();decoMenu()}
 function paint(k,c){if(S.paint[k]===c)return;if(S.cash<15){toast('Not enough cash');SFX.bad();return}S.cash-=15;S.paint[k]=c;renderDeco();SFX.ok();store();decoMenu()}
 let decoG=null;
@@ -39,26 +84,32 @@ function renderDeco(){if(decoG)INN.remove(decoG);decoG=new THREE.Group();INN.add
   if(D.includes('speaker')){box(decoG,.4,.6,.3,0x222222,-4.5,.4,3.5);box(decoG,.3,.3,.2,0x444444,-4.5,.9,3.5)}
   if(D.includes('mirror'))box(decoG,.8,1.2,.05,0xaaccff,4.7,2.2,1.5);
 }
-// ===== Player work jobs + chores (harder economy) =====
 const WORK_JOBS=[
-  {id:'shop',name:'Shop assistant',pay:6,mins:12,energy:22,hours:[16,19],desc:'Stack shelves at Singh\'s. Tiring shift.'},
-  {id:'deliver',name:'Food delivery',pay:8,mins:14,energy:28,hours:[17,20],desc:'Deliver meals on a bike. Exhausting.'},
-  {id:'tutor',name:'Tutor a neighbour kid',pay:10,mins:15,energy:16,hours:[17,19],needFriend:40,desc:'Homework help. Need a good friend (40+).'},
-  {id:'carwash',name:'Car wash',pay:5,mins:10,energy:24,hours:[11,15],desc:'Wash cars near the bus stop. Hard work.'}
+  {id:'shop',name:'Shop assistant',pay:6,mins:12,energy:22,hours:[16,19],mind:12,desc:'Stack shelves. Needs Mind 12 (study to level up).'},
+  {id:'deliver',name:'Food delivery',pay:8,mins:14,energy:28,hours:[17,20],fit:18,desc:'Bike deliveries. Needs Fitness 18 (workout).'},
+  {id:'tutor',name:'Tutor a neighbour kid',pay:10,mins:15,energy:16,hours:[17,19],mind:28,needFriend:40,desc:'Teach homework. Mind 28 + a friend (40+).'},
+  {id:'carwash',name:'Car wash',pay:5,mins:10,energy:24,hours:[11,15],fit:10,desc:'Physical work. Needs Fitness 10.'}
 ];
+function mindSkill(){S.sk=S.sk||{cook:0,fit:0,mind:0};const k=S.know||{};const avg=((k.Maths||0)+(k.English||0)+(k.Science||0))/3;return Math.min(100,Math.round((S.sk.mind||0)*0.7+avg*0.3))}
+function fitSkill(){S.sk=S.sk||{cook:0,fit:0,mind:0};return Math.round(S.sk.fit||0)}
 function jobsMenu(){
   const h=hr();
   S.jobDay=S.jobDay||{};
-  let html='<h3>Jobs</h3><p class="m">Cash '+gbp(S.cash)+' · Energy '+Math.round(S.energy)+'<br>One paid job per day.</p>';
+  let html='<h3>Jobs</h3><p class="m">Cash '+gbp(S.cash)+' · Energy '+Math.round(S.energy)+'<br>Mind '+mindSkill()+' · Fitness '+fitSkill()+' · One job per day.</p>';
   WORK_JOBS.forEach((j,i)=>{
     const done=S.jobDay[j.id]===day()||S.jobDay._any===day();
     const open=h>=j.hours[0]&&h<j.hours[1];
+    const mindOk=!j.mind||mindSkill()>=j.mind;
+    const fitOk=!j.fit||fitSkill()>=j.fit;
+    const frOk=!j.needFriend||NP.some(n=>rel(n.id).f>=j.needFriend);
     let lock='';
     if(S.jobDay._any===day())lock=' (already worked today)';
     else if(done)lock=' (done today)';
     else if(!open)lock=' (open '+j.hours[0]+':00–'+j.hours[1]+':00)';
-    else if(j.needFriend&&!NP.some(n=>rel(n.id).f>=j.needFriend))lock=' (need a friend first)';
-    const ok=!done&&open&&!(j.needFriend&&!NP.some(n=>rel(n.id).f>=j.needFriend));
+    else if(!mindOk)lock=' (Mind '+mindSkill()+'/'+j.mind+' — study more)';
+    else if(!fitOk)lock=' (Fitness '+fitSkill()+'/'+j.fit+' — work out)';
+    else if(!frOk)lock=' (need a friend first)';
+    const ok=!done&&open&&mindOk&&fitOk&&frOk;
     html+='<button class="o" onclick="startJob('+i+')" '+(ok?'':'style="opacity:.45"')+'><b>'+j.name+'</b> · '+gbp(j.pay)+'<br><span class="m">'+j.desc+lock+'</span></button>';
   });
   html+='<button class="o" onclick="phone()">Back</button>';
@@ -70,6 +121,8 @@ function startJob(i){
   if(S.jobDay._any===day()){toast('You already worked today. Rest up.');SFX.bad();return}
   if(S.jobDay[j.id]===day()){toast('Already did that today');SFX.bad();return}
   if(h<j.hours[0]||h>=j.hours[1]){toast('Not available now');SFX.bad();return}
+  if(j.mind&&mindSkill()<j.mind){toast('Mind skill too low — study at your desk or library');SFX.bad();return}
+  if(j.fit&&fitSkill()<j.fit){toast('Fitness too low — exercise at home');SFX.bad();return}
   if(j.needFriend&&!NP.some(n=>rel(n.id).f>=j.needFriend)){toast('Need a friend first');SFX.bad();return}
   if(S.energy<j.energy){toast('Too tired — need more energy');SFX.bad();return}
   if(typeof ACT!=='undefined'&&ACT){toast('You are already busy');return}
