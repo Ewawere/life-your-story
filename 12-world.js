@@ -69,7 +69,7 @@ function setScene(inside,vis){SFX.door();S.inside=inside;S.vis=vis||null;const h
 function enterHome(){setScene(true);P.position.set(0,0,2.2);toast('Inside your home');store()}
 function leaveHome(){setScene(false);P.position.set(0,0,-3.4);toast('Back outside');store()}
 
-const A_OUT=[{x:0,z:-4,r:4.5,label:'Enter home',fn:enterHome},{x:28,z:-3.4,r:4.5,label:'Enter school',fn:schoolMenu},{x:-28,z:10.8,r:4.5,label:'University admissions',fn:uniMenu},{x:0,z:11,r:4.5,label:'Enter shop',fn:shopMenu},...DIST.map(d=>({x:d.ox+6,z:-1,r:2.4,label:'Bus stop',fn:busMenu})),...NP.map(n=>({x:n.door[0],z:n.door[1],r:3.5,label:n.name+"'s house",fn:()=>visitDoor(n)}))];
+const A_OUT=[{x:0,z:-4,r:4.5,label:'Enter home',fn:enterHome},{x:28,z:-3.4,r:4.5,label:'Enter library',fn:libraryMenu},{x:-28,z:10.8,r:4.5,label:'University admissions',fn:uniMenu},{x:0,z:11,r:4.5,label:'Enter shop',fn:shopMenu},...DIST.map(d=>({x:d.ox+6,z:-1,r:2.4,label:'Bus stop',fn:busMenu})),...NP.map(n=>({x:n.door[0],z:n.door[1],r:3.5,label:n.name+"'s house",fn:()=>visitDoor(n)}))];
 const A_IN=[{x:-3,z:-2.8,label:'Study desk',fn:deskMenu},
  {x:3,z:-1.6,label:'Sleep until morning',fn:()=>{S.energy=100;S.t=S.t%1440<420?Math.floor(S.t/1440)*1440+420:(Math.floor(S.t/1440)+1)*1440+420;gain('hunger',-25);gain('hygiene',-10);gain('fun',-5);S.nt=S.t;toast('You slept well. It is 07:00.');store()}},
  {x:-3,z:.2,r:2.2,label:'Watch TV',fn:tvMenu},
