@@ -27,7 +27,6 @@ function phone(){
       app('🗺️','Maps','pMap()')+
       app('🍔','Food','pFood()')+
       app('💼','Jobs','jobsMenu()')+
-      app('🎲','Bets','betMenu()')+
       app('🏠','Home','closeM();enterHome()')+
       app('🚌','Bus','closeM();busMenu()')+
     '</div>'+
