@@ -5,5 +5,7 @@
     if(!r.ok) throw new Error('s13.p'+i+' failed');
     b+=await r.text();
   }
-  (0,eval)(atob(b));
+  const s=document.createElement('script');
+  s.textContent=atob(b);
+  document.body.appendChild(s);
 })().catch(e=>{console.error(e);alert('Failed to load s13: '+e.message)});

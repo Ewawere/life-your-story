@@ -1,5 +1,10 @@
-/* Sequential loader for base64-split modules (s5,s9,s10,s12,s13,s14) */
+/* Sequential loader for base64-split modules — injects as real scripts so const/let are global */
 (async function(){
+  function inject(code){
+    const s=document.createElement('script');
+    s.textContent=code;
+    document.body.appendChild(s);
+  }
   async function loadB64(name, n){
     let b='';
     for(let i=0;i<n;i++){
@@ -7,37 +12,28 @@
       if(!r.ok) throw new Error('Failed '+name+'.p'+i);
       b+=await r.text();
     }
-    (0,eval)(atob(b));
+    inject(atob(b));
+  }
+  function loadSrc(src){
+    return new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src=src;
+      s.onload=res;
+      s.onerror=()=>rej(new Error(src));
+      document.body.appendChild(s);
+    });
   }
   try{
     await loadB64('s5',8);
-    // s6,s7,s8 are normal scripts loaded after this file via dynamic inject
-    const next=['s6.js','s7.js','s8.js'];
-    for(const src of next){
-      await new Promise((res,rej)=>{
-        const s=document.createElement('script');
-        s.src=src;s.onload=res;s.onerror=()=>rej(new Error(src));
-        document.body.appendChild(s);
-      });
-    }
+    for(const src of ['s6.js','s7.js','s8.js']) await loadSrc(src);
     await loadB64('s9',8);
     await loadB64('s10',8);
-    await new Promise((res,rej)=>{
-      const s=document.createElement('script');
-      s.src='s11.js';s.onload=res;s.onerror=()=>rej(new Error('s11'));
-      document.body.appendChild(s);
-    });
+    await loadSrc('s11.js');
     await loadB64('s12',7);
     await loadB64('s13',7);
     await loadB64('s14',8);
-    await new Promise((res,rej)=>{
-      const s=document.createElement('script');
-      s.src='s15.js';s.onload=res;s.onerror=()=>rej(new Error('s15'));
-      document.body.appendChild(s);
-    });
-    const s2=document.createElement('script');
-    s2.src='screen-2d.js';
-    document.body.appendChild(s2);
+    await loadSrc('s15.js');
+    await loadSrc('screen-2d.js');
   }catch(e){
     console.error(e);
     alert('Failed to load game: '+e.message);
