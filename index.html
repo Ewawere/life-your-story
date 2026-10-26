@@ -3,7 +3,7 @@
 <title>Life: Your Story</title>
 <style>html,body{margin:0;height:100%;background:#0e2230;color:#fff;font:16px system-ui}
 #b{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px}</style></head>
-<body><div id="b">Loading…</div>
+<body><div id="b">Loading exact game…</div>
 <script>
 (async()=>{
   const el=document.getElementById('b');
@@ -12,9 +12,9 @@
     const N=32;
     for(let i=0;i<N;i++){
       const r=await fetch('z'+i+'.txt');
-      if(!r.ok) throw new Error('part '+i+' ('+r.status+')');
+      if(!r.ok) throw new Error('part '+i+' ('+r.status+') — still uploading');
       b64+=await r.text();
-      el.textContent='Loading '+(i+1)+'/'+N;
+      el.textContent='Loading exact game '+(i+1)+'/'+N;
     }
     const bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
     const ds=new DecompressionStream('gzip');
