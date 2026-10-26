@@ -61,7 +61,11 @@ function __inject(code,name){
   s.textContent=code+'\n//# sourceURL='+(name||'inject')+'.js';
   document.body.appendChild(s);
 }
-async function __loadB64(name,n,bridgeCode){
+function __toVar(code){
+  // Make injected top-level bindings real globals (var attaches to window)
+  return code.replace(/\bconst\b/g,'var').replace(/\blet\b/g,'var');
+}
+async function __loadB64(name,n){
   __log('Loading '+name+'…');
   let b='';
   for(let i=0;i<n;i++){
@@ -71,7 +75,7 @@ async function __loadB64(name,n,bridgeCode){
   }
   let code;
   try{ code=atob(b); }catch(e){ throw new Error(name+' bad base64'); }
-  if(bridgeCode) code+=bridgeCode;
+  code=__toVar(code);
   __inject(code,name);
   __log('OK '+name+' ('+code.length+')');
 }
@@ -83,24 +87,28 @@ async function __loadB64(name,n,bridgeCode){
     await __loadSrc('s2.js');
     await __loadSrc('s3.js');
     await __loadSrc('s4.js');
-    await __loadB64('s5',8,';try{window.WX=WX}catch(e){}try{window.SHOWS=SHOWS}catch(e){}try{window.MEALS=MEALS}catch(e){}try{window.ACT=ACT}catch(e){}try{window.raining=raining}catch(e){}try{window.rainyDay=rainyDay}catch(e){}try{window.YEAR=YEAR}catch(e){}try{window.age=age}catch(e){}try{window.birthday=birthday}catch(e){}try{window.nstat=nstat}catch(e){}try{window.phone=phone}catch(e){}try{window.goHome=goHome}catch(e){}try{window.pContacts=pContacts}catch(e){}try{window.pContact=pContact}catch(e){}try{window.pText=pText}catch(e){}try{window.pMap=pMap}catch(e){}try{window.pFood=pFood}catch(e){}try{window.order=order}catch(e){}try{window.busMenu=busMenu}catch(e){}try{window.ride=ride}catch(e){}try{window.tvMenu=tvMenu}catch(e){}try{window.startTV=startTV}catch(e){}');
+    await __loadB64('s5',8);
     await __loadSrc('s6.js');
     await __loadSrc('s7.js');
     await __loadSrc('s8.js');
-    await __loadB64('s9',8,';try{window.NP=NP}catch(e){}try{window.PI=PI}catch(e){}try{window.TOP=TOP}catch(e){}try{window.FL=FL}catch(e){}try{window.rel=rel}catch(e){}try{window.hx=hx}catch(e){}try{window.YOU=YOU}catch(e){}try{window.LINES=LINES}catch(e){}try{window.INTRO=INTRO}catch(e){}try{window.LIKE=LIKE}catch(e){}try{window.DIS=DIS}catch(e){}try{window.ADV=ADV}catch(e){}try{window.talk=talk}catch(e){}try{window.topic=topic}catch(e){}try{window.mkN=mkN}catch(e){}try{window.CROWD=CROWD}catch(e){}try{window.CULLED=CULLED}catch(e){}try{window.RXS=RXS}catch(e){}try{window.RZS=RZS}catch(e){}try{window.SPECIAL=SPECIAL}catch(e){}try{window.EXPL=EXPL}catch(e){}');
-    await __loadB64('s10',8,';try{window.BUB=BUB}catch(e){}try{window.camT=camT}catch(e){}try{window.mvSp=mvSp}catch(e){}try{window.say=say}catch(e){}try{window.toScreen=toScreen}catch(e){}try{window.updateBubbles=updateBubbles}catch(e){}try{window.GREET=GREET}catch(e){}try{window.NCH=NCH}catch(e){}try{window.NRE=NRE}catch(e){}try{window.PAIRS=PAIRS}catch(e){}try{window.FIRSTN=FIRSTN}catch(e){}try{window.SURN=SURN}catch(e){}try{window.PERS5=PERS5}catch(e){}try{window.CLR=CLR}catch(e){}try{window.HAIRC=HAIRC}catch(e){}try{window.SKINC=SKINC}catch(e){}try{window.STYL=STYL}catch(e){}try{window.chatter=chatter}catch(e){}try{window.TXT=TXT}catch(e){}try{window.texting=texting}catch(e){}try{window.pMsgs=pMsgs}catch(e){}try{window.pMsg=pMsg}catch(e){}try{window.reply=reply}catch(e){}try{window.visitDoor=visitDoor}catch(e){}try{window.leaveVisit=leaveVisit}catch(e){}try{window.shared=shared}catch(e){}try{window.A_V=A_V}catch(e){}');
+    await __loadB64('s9',8);
+    if(typeof NP==='undefined') throw new Error('NP missing after s9');
+    await __loadB64('s10',8);
     await __loadSrc('s11.js');
-    await __loadB64('s12',7,';try{window.R=R}catch(e){}try{window.sc=sc}catch(e){}try{window.cam=cam}catch(e){}try{window.hemi=hemi}catch(e){}try{window.sun=sun}catch(e){}try{window.OUT=OUT}catch(e){}try{window.INN=INN}catch(e){}try{window.GEO=GEO}catch(e){}try{window.MAT=MAT}catch(e){}try{window.mt=mt}catch(e){}try{window.gm=gm}catch(e){}try{window.box=box}catch(e){}try{window.cyl=cyl}catch(e){}try{window.person=person}catch(e){}try{window.anim=anim}catch(e){}try{window.outRects=outRects}catch(e){}try{window.inRects=inRects}catch(e){}try{window.acts=acts}catch(e){}try{window.movers=movers}catch(e){}try{window.WM=WM}catch(e){}try{window.wn=wn}catch(e){}try{window.HC=HC}catch(e){}try{window.DIST=DIST}catch(e){}try{window.areaOf=areaOf}catch(e){}try{window.addr=addr}catch(e){}try{window.house=house}catch(e){}try{window.HP=HP}catch(e){}');
-    await __loadB64('s13',7,';try{window.mk2=mk2}catch(e){}try{window.marker=marker}catch(e){}try{window.car=car}catch(e){}try{window.HFL=HFL}catch(e){}try{window.HW=HW}catch(e){}try{window.INN2=INN2}catch(e){}try{window.hostG=hostG}catch(e){}try{window.P=P}catch(e){}try{window.buildHost=buildHost}catch(e){}try{window.buildPlayer=buildPlayer}catch(e){}try{window.setScene=setScene}catch(e){}try{window.enterHome=enterHome}catch(e){}try{window.leaveHome=leaveHome}catch(e){}try{window.A_OUT=A_OUT}catch(e){}try{window.A_IN=A_IN}catch(e){}');
-    await __loadB64('s14',8,';try{window.SKYC=SKYC}catch(e){}try{window.NIGHTC=NIGHTC}catch(e){}try{window.DAYC=DAYC}catch(e){}try{window.GREYC=GREYC}catch(e){}try{window.jx=jx}catch(e){}try{window.jy=jy}catch(e){}try{window.yaw=yaw}catch(e){}try{window.lookId=lookId}catch(e){}try{window.lx=lx}catch(e){}try{window.keys=keys}catch(e){}try{window.near=near}catch(e){}try{window.blocked=blocked}catch(e){}try{window.resize=resize}catch(e){}try{window.last=last}catch(e){}try{window.saveT=saveT}catch(e){}try{window.update=update}catch(e){}try{window.loop=loop}catch(e){}');
+    await __loadB64('s12',7);
+    if(typeof R==='undefined') throw new Error('R missing after s12');
+    await __loadB64('s13',7);
+    if(typeof P==='undefined') throw new Error('P missing after s13');
+    await __loadB64('s14',8);
     await __loadSrc('s15.js');
     await __loadSrc('screen-2d.js');
     setTimeout(()=>{
-      const m=document.getElementById('modal');
-      if(m && getComputedStyle(m).display==='none' && typeof newLifeScreen==='function'){
-        try{ newLifeScreen(); }catch(e){ console.error(e); alert('Start error: '+e.message); }
-      }
-      if(typeof newLifeScreen!=='function'){
+      if(typeof newLifeScreen==='function'){
+        try{
+          const m=document.getElementById('modal');
+          if(m && getComputedStyle(m).display==='none') newLifeScreen();
+        }catch(e){ console.error(e); alert('Start error: '+e.message); }
+      } else {
         alert('Game failed to start. Log: '+window.__lysLog.join(' | '));
       }
     },100);
