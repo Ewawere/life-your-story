@@ -2,25 +2,27 @@
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Life: Your Story</title>
 <style>html,body{margin:0;height:100%;background:#0e2230;color:#fff;font:16px system-ui}
-#b{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}</style></head>
+#b{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px}</style></head>
 <body><div id="b">Loading…</div>
 <script>
 (async()=>{
-  try {
-    const N=24;
-    let s='';
-    for (let i=0;i<N;i++) {
-      const r=await fetch('j'+i+'.txt');
-      if (!r.ok) throw new Error('j'+i+' missing ('+r.status+')');
-      s += await r.text();
-      document.getElementById('b').textContent = 'Loading ' + Math.round((i+1)/N*100) + '%';
+  const el=document.getElementById('b');
+  try{
+    let b64='';
+    const N=32;
+    for(let i=0;i<N;i++){
+      const r=await fetch('z'+i+'.txt');
+      if(!r.ok) throw new Error('part '+i+' ('+r.status+')');
+      b64+=await r.text();
+      el.textContent='Loading '+(i+1)+'/'+N;
     }
-    const html = JSON.parse('"' + s + '"');
-    document.open();
-    document.write(html);
-    document.close();
-  } catch(e) {
-    document.getElementById('b').textContent = 'Failed: ' + e.message;
+    const bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+    const ds=new DecompressionStream('gzip');
+    const stream=new Blob([bin]).stream().pipeThrough(ds);
+    const html=await new Response(stream).text();
+    document.open();document.write(html);document.close();
+  }catch(e){
+    el.textContent='Failed: '+e.message;
     console.error(e);
   }
 })();
