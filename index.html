@@ -38,99 +38,17 @@ input[type=text]{width:100%;padding:12px;border-radius:10px;border:1px solid #ff
 .sw.on{border-color:#fff}
 table{width:100%;border-collapse:collapse;font-size:14px}td{padding:4px 0;vertical-align:top}td:first-child{color:var(--mu);width:42%}
 .big{font-size:44px;font-weight:800;color:var(--ac);line-height:1}
+#hint{position:fixed;left:12px;right:12px;top:calc(64px + env(safe-area-inset-top,0px));display:none;text-align:center;pointer-events:none}
 </style></head><body>
 <canvas id="c"></canvas>
-<div id="bub"></div><div id="rain"></div><div id="hud"><div class="chip"><b id="hn"></b> <span id="hc" class="m"></span><span class="bar"><i id="he"></i></span><span id="nd" class="m" style="display:block;font-size:12px;margin-top:4px"></span></div><span><button id="phoneBtn" onclick="phone()">📱</button> <button id="menuBtn" onclick="menu()">Menu</button></span></div>
-<div id="hint" class="chip" style="position:fixed;left:12px;right:12px;top:calc(64px + env(safe-area-inset-top,0px));display:none;text-align:center;pointer-events:none"></div><div id="look"></div><div id="joy"><div id="knob"></div></div>
+<div id="bub"></div><div id="rain"></div>
+<div id="hud"><div class="chip"><b id="hn"></b> <span id="hc" class="m"></span><span class="bar"><i id="he"></i></span><span id="nd" class="m" style="display:block;font-size:12px;margin-top:4px"></span></div><span><button id="phoneBtn" onclick="phone()">📱</button> <button id="menuBtn" onclick="menu()">Menu</button></span></div>
+<div id="hint" class="chip"></div><div id="look"></div><div id="joy"><div id="knob"></div></div>
 <button id="act"></button><div id="toast"></div>
 <div id="modal"><div id="mb"></div></div>
-<script>
-window.__lysLog=[];
-function __log(m,err){window.__lysLog.push(m);if(err)console.error(m);else console.log(m);}
-function __loadSrc(src){
-  return new Promise((res,rej)=>{
-    const s=document.createElement('script');
-    s.src=src;
-    s.onload=()=>{__log('OK '+src);res()};
-    s.onerror=()=>{__log('FAIL '+src,1);rej(new Error('Failed '+src))};
-    document.body.appendChild(s);
-  });
-}
-function __inject(code,name){
-  const s=document.createElement('script');
-  s.textContent=code+'\n//# sourceURL='+(name||'inject')+'.js';
-  document.body.appendChild(s);
-}
-function __toVar(code){
-  return code.replace(/\bconst\b/g,'var').replace(/\blet\b/g,'var');
-}
-async function __fetchB64(name,n){
-  let b='';
-  for(let i=0;i<n;i++){
-    const r=await fetch(name+'.p'+i+'.txt');
-    if(!r.ok) throw new Error(name+'.p'+i+' HTTP '+r.status);
-    b+=await r.text();
-  }
-  try{ return atob(b); }catch(e){ throw new Error(name+' bad base64'); }
-}
-async function __loadB64(name,n){
-  __log('Loading '+name+'…');
-  const code=__toVar(await __fetchB64(name,n));
-  __inject(code,name);
-  __log('OK '+name+' ('+code.length+')');
-}
-async function __loadB64Join(parts){
-  // parts: [['s12',7],['s13',7]] — decode and join before inject (split modules that are one logical file)
-  const label=parts.map(p=>p[0]).join('+');
-  __log('Loading '+label+'…');
-  let code='';
-  for(const [name,n] of parts){ code+=await __fetchB64(name,n); }
-  code=__toVar(code);
-  __inject(code,label);
-  __log('OK '+label+' ('+code.length+')');
-}
-(async()=>{
-  try{
-    await __loadSrc('renderer-2d.js');
-    try{ if(typeof THREE!=='undefined') window.THREE=THREE; }catch(e){}
-    await __loadSrc('s1.js');
-    await __loadSrc('s2.js');
-    await __loadSrc('s3.js');
-    await __loadSrc('s4.js');
-    await __loadB64('s5',8);
-    await __loadSrc('s6.js');
-    await __loadSrc('s7.js');
-    await __loadSrc('s8.js');
-    await __loadB64('s9',8);
-    if(typeof NP==='undefined') throw new Error('NP missing after s9');
-    await __loadB64('s10',8);
-    await __loadSrc('s11.js');
-    // s12 ends mid-block; s13 continues it — must be one script
-    await __loadB64Join([['s12',7],['s13',7]]);
-    if(typeof R==='undefined') throw new Error('R missing after world');
-    if(typeof P==='undefined') throw new Error('P missing after world');
-    await __loadB64('s14',8);
-    await __loadSrc('s15.js');
-    await __loadSrc('screen-2d.js');
-    setTimeout(()=>{
-      if(typeof newLifeScreen==='function'){
-        try{
-          const m=document.getElementById('modal');
-          if(m && getComputedStyle(m).display==='none') newLifeScreen();
-        }catch(e){ console.error(e); alert('Start error: '+e.message); }
-      } else {
-        alert('Game failed to start. Log: '+window.__lysLog.join(' | '));
-      }
-    },100);
-  }catch(e){
-    console.error(e);
-    const m=document.getElementById('modal');
-    const mb=document.getElementById('mb');
-    if(m&&mb){
-      m.style.display='flex';
-      mb.innerHTML='<h2>Load error</h2><p style="color:#ff7a6b">'+e.message+'</p><p style="color:#9fb7c4;font-size:13px">'+window.__lysLog.join('<br>')+'</p>';
-    } else alert('Load error: '+e.message+'\n'+window.__lysLog.join('\n'));
-  }
-})();
-</script>
+<script src="renderer.js"></script>
+<script src="main0.js"></script>
+<script src="main1.js"></script>
+<script src="main2.js"></script>
+<script src="screen.js"></script>
 </body></html>
