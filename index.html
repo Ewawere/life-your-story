@@ -62,22 +62,32 @@ function __inject(code,name){
   document.body.appendChild(s);
 }
 function __toVar(code){
-  // Make injected top-level bindings real globals (var attaches to window)
   return code.replace(/\bconst\b/g,'var').replace(/\blet\b/g,'var');
 }
-async function __loadB64(name,n){
-  __log('Loading '+name+'…');
+async function __fetchB64(name,n){
   let b='';
   for(let i=0;i<n;i++){
     const r=await fetch(name+'.p'+i+'.txt');
     if(!r.ok) throw new Error(name+'.p'+i+' HTTP '+r.status);
     b+=await r.text();
   }
-  let code;
-  try{ code=atob(b); }catch(e){ throw new Error(name+' bad base64'); }
-  code=__toVar(code);
+  try{ return atob(b); }catch(e){ throw new Error(name+' bad base64'); }
+}
+async function __loadB64(name,n){
+  __log('Loading '+name+'…');
+  const code=__toVar(await __fetchB64(name,n));
   __inject(code,name);
   __log('OK '+name+' ('+code.length+')');
+}
+async function __loadB64Join(parts){
+  // parts: [['s12',7],['s13',7]] — decode and join before inject (split modules that are one logical file)
+  const label=parts.map(p=>p[0]).join('+');
+  __log('Loading '+label+'…');
+  let code='';
+  for(const [name,n] of parts){ code+=await __fetchB64(name,n); }
+  code=__toVar(code);
+  __inject(code,label);
+  __log('OK '+label+' ('+code.length+')');
 }
 (async()=>{
   try{
@@ -95,10 +105,10 @@ async function __loadB64(name,n){
     if(typeof NP==='undefined') throw new Error('NP missing after s9');
     await __loadB64('s10',8);
     await __loadSrc('s11.js');
-    await __loadB64('s12',7);
-    if(typeof R==='undefined') throw new Error('R missing after s12');
-    await __loadB64('s13',7);
-    if(typeof P==='undefined') throw new Error('P missing after s13');
+    // s12 ends mid-block; s13 continues it — must be one script
+    await __loadB64Join([['s12',7],['s13',7]]);
+    if(typeof R==='undefined') throw new Error('R missing after world');
+    if(typeof P==='undefined') throw new Error('P missing after world');
     await __loadB64('s14',8);
     await __loadSrc('s15.js');
     await __loadSrc('screen-2d.js');
