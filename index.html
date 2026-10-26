@@ -1,26 +1,26 @@
 <!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Life: Your Story</title>
-<style>html,body{margin:0;height:100%;background:#0e2230;color:#f2f6f8;font:16px system-ui,sans-serif}
+<style>html,body{margin:0;height:100%;background:#0e2230;color:#fff;font:16px system-ui}
 #b{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}</style></head>
-<body><div id="b">Loading game…</div>
+<body><div id="b">Loading…</div>
 <script>
 (async()=>{
-  try{
-    let b='';
-    const N=41;
-    for(let i=0;i<N;i++){
-      const r=await fetch('g'+i+'.txt');
-      if(!r.ok) throw new Error('g'+i+' '+r.status);
-      b+=await r.text();
-      document.getElementById('b').textContent='Loading… '+Math.round((i+1)/N*100)+'%';
+  try {
+    const N=24;
+    let s='';
+    for (let i=0;i<N;i++) {
+      const r=await fetch('j'+i+'.txt');
+      if (!r.ok) throw new Error('j'+i+' missing ('+r.status+')');
+      s += await r.text();
+      document.getElementById('b').textContent = 'Loading ' + Math.round((i+1)/N*100) + '%';
     }
-    const html=atob(b);
+    const html = JSON.parse('"' + s + '"');
     document.open();
     document.write(html);
     document.close();
-  }catch(e){
-    document.getElementById('b').textContent='Failed: '+e.message;
+  } catch(e) {
+    document.getElementById('b').textContent = 'Failed: ' + e.message;
     console.error(e);
   }
 })();
