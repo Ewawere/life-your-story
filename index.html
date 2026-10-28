@@ -1,44 +1,29 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Life: Your Story — First Day 0.1</title>
-<style>
-:root{--bg:#0e2230;--pn:#16384c;--ac:#ffb62e;--tx:#f2f6f8;--mu:#9fb7c4;--ok:#5fd08a;--no:#ff7a6b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
-canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
-button{font:inherit;color:inherit}
-#hud{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);display:none;justify-content:space-between;align-items:center;padding:10px 12px;pointer-events:none}
-#hud>*{pointer-events:auto}
-.chip{background:#0e2230cc;border-radius:12px;padding:8px 12px;font-size:14px}
-.bar{display:block;width:90px;height:6px;background:#ffffff33;border-radius:3px;margin-top:4px}
-.bar i{display:block;height:100%;background:var(--ac);border-radius:3px}
-#menuBtn{background:var(--ac);color:#1a1200;border:0;border-radius:12px;padding:10px 16px;font-weight:700}
-#rain{position:fixed;inset:0;pointer-events:none;display:none;background:repeating-linear-gradient(105deg,transparent 0 7px,#d6ebffaa 7px 8px);background-size:60px 90px;animation:rn .35s linear infinite}
-@keyframes rn{to{background-position:-30px 90px}}
-#joy{position:fixed;left:22px;bottom:calc(30px + env(safe-area-inset-bottom,0px));width:120px;height:120px;border-radius:50%;background:#ffffff22;border:2px solid #ffffff44;display:none;touch-action:none}
-#knob{position:absolute;left:40px;top:40px;width:40px;height:40px;border-radius:50%;background:#ffffffaa}
-#look{position:fixed;right:0;top:80px;bottom:0;width:50%;display:none;touch-action:none}
-#act{position:fixed;right:20px;bottom:calc(40px + env(safe-area-inset-bottom,0px));display:none;background:var(--ac);color:#1a1200;border:0;border-radius:16px;padding:16px 20px;font-weight:700;font-size:17px;max-width:55%;z-index:5}
-#toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:#000b;padding:10px 16px;border-radius:12px;display:none;z-index:20;max-width:90%;text-align:center}
-#modal{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:10;padding:14px;touch-action:pan-y}
-#mb{background:var(--pn);border-radius:18px;padding:18px;width:100%;max-width:440px;max-height:88%;overflow-y:auto;user-select:text;-webkit-user-select:text}
-h2,h3{margin:0 0 8px}h2{font-size:24px}h3{font-size:19px}
-p{margin:6px 0}.m{color:var(--mu);font-size:14px}
-.o{display:block;width:100%;text-align:left;background:#ffffff14;border:1px solid #ffffff2a;border-radius:12px;padding:13px;margin:8px 0}
-.o.go{background:var(--ac);color:#1a1200;font-weight:700;text-align:center;border:0}
-.o.ok{background:#5fd08a33;border-color:var(--ok)}.o.no{background:#ff7a6b33;border-color:var(--no)}
-</style></head><body>
-<canvas id="c"></canvas>
-<div id="hud"><div class="chip" id="stats"></div><button id="menuBtn">Menu</button></div>
-<div id="rain"></div>
-<div id="joy"><div id="knob"></div></div>
-<div id="look"></div>
-<button id="act">Action</button>
-<div id="toast"></div>
-<div id="modal"><div id="mb"></div></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Life: Your Story — 3D</title>
+<style>html,body{margin:0;height:100%;background:#0e2230;color:#fff;font:16px system-ui}
+#b{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px}</style></head>
+<body><div id="b">Loading 3D version…</div>
 <script>
-/* NOTE: This is a placeholder. Full content will be written via proper method. */
-console.log('3D version loading...');
+(async()=>{
+  const el=document.getElementById('b');
+  try{
+    let b64='';
+    const N=20;
+    for(let i=0;i<N;i++){
+      const r=await fetch('d'+i+'.txt');
+      if(!r.ok) throw new Error('part '+i+' ('+r.status+') — still uploading');
+      b64+=await r.text();
+      el.textContent='Loading 3D game '+(i+1)+'/'+N;
+    }
+    const bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+    const ds=new DecompressionStream('gzip');
+    const stream=new Blob([bin]).stream().pipeThrough(ds);
+    const html=await new Response(stream).text();
+    document.open();document.write(html);document.close();
+  }catch(e){
+    el.textContent='Failed: '+e.message;
+    console.error(e);
+  }
+})();
 </script></body></html>
