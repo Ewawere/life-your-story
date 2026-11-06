@@ -9,8 +9,8 @@
   const el=document.getElementById('b');
   try{
     let b64='';
-    const N=31;
-    const v='v2'; // cache bust
+    const N=33;
+    const v='v3';
     for(let i=0;i<N;i++){
       const r=await fetch('e'+i+'.txt?'+v,{cache:'no-store'});
       if(!r.ok) throw new Error('part '+i+' ('+r.status+')');
